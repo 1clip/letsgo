@@ -1,0 +1,11 @@
+### system files
+.DS_Store
+
+### intellij files
+.idea/
+*.iml
+
+### generated files
+target/
+*.class
+*.jar
