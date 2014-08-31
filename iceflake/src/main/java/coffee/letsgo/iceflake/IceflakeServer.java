@@ -47,8 +47,6 @@ public class IceflakeServer {
                         binder.bindConstant().annotatedWith(Names.named("worker id")).to(workerId);
                         binder.bindConstant().annotatedWith(Names.named("datacenter id")).to(datacenterId);
                         binder.bind(IceflakeImpl.class).in(Scopes.SINGLETON);
-
-                        // export scribe service implementation
                         ThriftServiceExporter.thriftServerBinder(binder).exportThriftService(IceflakeImpl.class);
                     }
                 }).getInstance(ThriftServer.class).start();
