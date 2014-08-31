@@ -8,12 +8,9 @@ import com.google.inject.name.Named;
  */
 public class IceflakeImpl implements Iceflake {
 
-    private long datacenterId, workerId;
+    private long datacenterId, workerId, sequence, lastTimestamp;
 
     private static long epoch = 1409436471455L;
-
-    private long lastTimestamp;
-    private int sequence;
 
     /*
      * bits: 1                    41                       5     5        12
@@ -30,11 +27,13 @@ public class IceflakeImpl implements Iceflake {
             sequenceBits = 12,
             workerIdBits = 5,
             datacenterIdBits = 5,
-            maxWorkerId = ~(-1 << workerIdBits),
-            maxDatacenterId = ~(-1 << datacenterIdBits),
             workerIdShift = sequenceBits,
             datacenterIdShift = sequenceBits + workerIdBits,
-            timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits,
+            timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
+
+    private static long
+            maxWorkerId = ~(-1 << workerIdBits),
+            maxDatacenterId = ~(-1 << datacenterIdBits),
             sequenceMask = ~(-1 << sequenceBits);
 
     @Inject

@@ -17,10 +17,7 @@ import org.jboss.netty.logging.Slf4JLoggerFactory;
  */
 public class IceflakeServer {
 
-    private int
-            datacenterId,
-            workerId,
-            serverPort;
+    private int datacenterId, workerId, serverPort;
 
     public IceflakeServer(int datacenterId,
                           int workerId,
