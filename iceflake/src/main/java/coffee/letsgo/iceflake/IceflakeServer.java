@@ -32,7 +32,6 @@ public class IceflakeServer {
     }
 
     public ThriftServer start() {
-        InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
         return Guice.createInjector(
                 Stage.PRODUCTION,
                 new ConfigurationModule(new ConfigurationFactory(
@@ -53,6 +52,7 @@ public class IceflakeServer {
     }
 
     public static void main(String[] args) {
+        InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
         Guice.createInjector(new Module() {
             @Override
             public void configure(Binder binder) {

@@ -8,6 +8,8 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Module;
 import org.apache.thrift.TException;
+import org.jboss.netty.logging.InternalLoggerFactory;
+import org.jboss.netty.logging.Slf4JLoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -58,6 +60,7 @@ public class IdGenTest {
 
     @BeforeTest
     public void setup() {
+        InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
         config = Guice.createInjector(
                 new Module() {
                     @Override
