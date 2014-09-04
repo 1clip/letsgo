@@ -7,12 +7,9 @@ public abstract class IceflakeConfig {
 
     public IceflakeServer apply() {
         return new IceflakeServer(
-                getDatacenterId(),
                 getWorkerId(),
                 getServerPort());
     }
-
-    public abstract int getDatacenterId();
 
     public abstract int getWorkerId();
 
@@ -20,11 +17,6 @@ public abstract class IceflakeConfig {
 }
 
 class DevConfig extends IceflakeConfig {
-
-    @Override
-    public int getDatacenterId() {
-        return 3;
-    }
 
     @Override
     public int getWorkerId() {

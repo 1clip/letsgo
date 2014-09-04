@@ -17,13 +17,11 @@ import org.jboss.netty.logging.Slf4JLoggerFactory;
  */
 public class IceflakeServer {
 
-    private int datacenterId, workerId, serverPort;
+    private int workerId, serverPort;
 
-    public IceflakeServer(int datacenterId,
-                          int workerId,
+    public IceflakeServer(int workerId,
                           int serverPort) {
 
-        this.datacenterId = datacenterId;
         this.workerId = workerId;
         this.serverPort = serverPort;
     }
@@ -41,7 +39,6 @@ public class IceflakeServer {
                     @Override
                     public void configure(Binder binder) {
                         binder.bindConstant().annotatedWith(Names.named("worker id")).to(workerId);
-                        binder.bindConstant().annotatedWith(Names.named("datacenter id")).to(datacenterId);
                         binder.bind(IceflakeImpl.class).in(Scopes.SINGLETON);
                         ThriftServiceExporter.thriftServerBinder(binder).exportThriftService(IceflakeImpl.class);
                     }

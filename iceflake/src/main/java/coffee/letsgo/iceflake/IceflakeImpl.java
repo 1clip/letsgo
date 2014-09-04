@@ -8,49 +8,59 @@ import com.google.inject.name.Named;
  */
 public class IceflakeImpl implements Iceflake {
 
-    private long datacenterId, workerId, sequence, lastTimestamp;
+    private long workerId;
+    private long[] sequences;
+    private long[] lastTimestamps;
 
     private static long epoch = 1409436471455L;
 
     /*
-     * bits: 1                    41                       5     5        12
-     *      +-+-----------------------------------------+-----+-----+------------+
-     *      |0|              milliseconds               | dc  | wkr |  sequence  |
-     *      |0|              since epoch                | id  | id  |   number   |
-     *      +-+-----------------------------------------+-----+-----+------------+
+     * bits: 1    7                        40                      6       10
+     *      +-+-------+----------------------------------------+------+----------+
+     *      |0|  id   |               milliseconds             |worker| sequence |
+     *      |0| type  |               since epoch              |  id  |  number  |
+     *      +-+-------|----------------------------------------+------+----------+
      *       ^
      *       |
      *       +-- msb
+     *
+     * supports 128 id types
+     * 64 id generating servers at most
+     * each id generating server generates 1024 ids at most per millisecond for each id type
+     * id would be exhausted after 34 years
      */
 
     private static int
-            sequenceBits = 12,
-            workerIdBits = 5,
-            datacenterIdBits = 5,
+            sequenceBits = 10,
+            workerIdBits = 6,
+            timeStampBits = 40,
+            idTypeBits = 7,
             workerIdShift = sequenceBits,
-            datacenterIdShift = sequenceBits + workerIdBits,
-            timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
+            timestampLeftShift = sequenceBits + workerIdBits,
+            idTypeShift = sequenceBits + workerIdBits + timeStampBits;
 
     private static long
             maxWorkerId = ~(-1 << workerIdBits),
-            maxDatacenterId = ~(-1 << datacenterIdBits),
-            sequenceMask = ~(-1 << sequenceBits);
+            sequenceMask = ~(-1 << sequenceBits),
+            maxIdType = ~(-1 << idTypeBits);
+
+    private Object[] locks;
 
     @Inject
-    public IceflakeImpl(@Named("datacenter id") int datacenterId,
-                        @Named("worker id") int workerId) {
+    public IceflakeImpl(@Named("worker id") int workerId) {
         if (workerId > maxWorkerId || workerId < 0) {
             throw new IllegalArgumentException(String.format(
                     "worker id can't be greater than %d or less than 0", maxWorkerId));
         }
-        if (datacenterId > maxDatacenterId || datacenterId < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "datacenter id can't be greater than %d or less than 0", maxDatacenterId));
-        }
         this.workerId = workerId;
-        this.datacenterId = datacenterId;
-        this.lastTimestamp = -1L;
-        this.sequence = 0;
+        this.lastTimestamps = new long[(int) maxIdType];
+        this.sequences = new long[(int) maxIdType];
+        this.locks = new Object[(int) maxIdType];
+        for(int i = 0; i < maxIdType; ++i) {
+            lastTimestamps[i] = -1L;
+            sequences[i] = 0L;
+            locks[i] = new Object();
+        }
     }
 
     @Override
@@ -64,40 +74,37 @@ public class IceflakeImpl implements Iceflake {
     }
 
     @Override
-    public long getId(String useragent) throws org.apache.thrift.TException {
-        if (!validUseragent(useragent)) {
-            throw new InvalidUserAgentError();
+    public long getId(final long type) throws org.apache.thrift.TException {
+        if (type < 0 || type > maxIdType) {
+            throw new InvalidIdTypeError();
         }
-
-        return nextId();
+        return nextId((int) type);
     }
 
-    @Override
-    public long getDatacenterId() throws org.apache.thrift.TException {
-        return datacenterId;
-    }
+    private long nextId(int type) {
+        synchronized (locks[type]) {
 
-    private synchronized long nextId() {
-        long timestamp = timeGen();
+            long timestamp = timeGen();
 
-        if (timestamp < lastTimestamp) {
-            throw new InvalidSystemClock();
-        }
-
-        if (lastTimestamp == timestamp) {
-            sequence = (sequence + 1) & sequenceMask;
-            if (sequence == 0) {
-                timestamp = tilNextMillis(lastTimestamp);
+            if (timestamp < lastTimestamps[type]) {
+                throw new InvalidSystemClock();
             }
-        } else {
-            sequence = 0;
-        }
 
-        lastTimestamp = timestamp;
-        return ((timestamp - epoch) << timestampLeftShift) |
-                (datacenterId << datacenterIdShift) |
-                (workerId << workerIdShift) |
-                sequence;
+            if (lastTimestamps[type] == timestamp) {
+                sequences[type] = (sequences[type] + 1) & sequenceMask;
+                if (sequences[type] == 0) {
+                    timestamp = tilNextMillis(lastTimestamps[type]);
+                }
+            } else {
+                sequences[type] = 0;
+            }
+
+            lastTimestamps[type] = timestamp;
+            return ((long) type << idTypeShift |
+                    (timestamp - epoch) << timestampLeftShift) |
+                    (workerId << workerIdShift) |
+                    sequences[type];
+        }
     }
 
     private long tilNextMillis(long lastTimestamp) {
@@ -111,9 +118,5 @@ public class IceflakeImpl implements Iceflake {
 
     private long timeGen() {
         return System.currentTimeMillis();
-    }
-
-    private boolean validUseragent(String useragent) {
-        return useragent.matches("^[a-zA-Z][a-zA-Z-0-9]*$");
     }
 }

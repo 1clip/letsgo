@@ -24,18 +24,17 @@ import java.util.concurrent.*;
 public class IdGenTest {
     private IceflakeConfig config;
     private ThriftServer server;
-    private String testAgent = "test-agent";
+    private int testIdType = 89;
 
     @Test
     public void testIdGeneration() throws ExecutionException, InterruptedException, TException {
         Iceflake client = buildClient();
-        Assert.assertEquals(client.getDatacenterId(), config.getDatacenterId());
         Assert.assertEquals(client.getWorkerId(), config.getWorkerId());
         long t1 = System.currentTimeMillis();
         long t = client.getTimestamp();
         long t2 = System.currentTimeMillis();
         Assert.assertTrue(t >= t1 && t <= t2);
-        Assert.assertTrue(client.getId(testAgent) > 0L);
+        Assert.assertTrue(client.getId(testIdType) > 0L);
     }
 
     @Test
@@ -48,14 +47,31 @@ public class IdGenTest {
         }
         pool.shutdown();
         pool.awaitTermination(10, TimeUnit.SECONDS);
-        int cnt = 0;
-        HashSet<Long> hs = new HashSet<Long>();
+
+        Assert.assertEquals(bucket.size(), threads * tries);
+        HashSet<Long> hs = new HashSet<>();
         while (!bucket.isEmpty()) {
             hs.add(bucket.poll());
-            ++cnt;
         }
-        Assert.assertEquals(cnt, threads * tries);
         Assert.assertEquals(hs.size(), threads * tries);
+    }
+
+    @Test
+    public void testInvalidIdType() throws ExecutionException, InterruptedException {
+        Iceflake client = buildClient();
+        try{
+            client.getId(-1);
+            Assert.assertEquals(true, false);
+        } catch (TException e) {
+            Assert.assertEquals(e.getMessage(), "Internal error processing getId");
+        }
+
+        try{
+            client.getId(1 << 7);
+            Assert.assertEquals(true, false);
+        } catch (TException e) {
+            Assert.assertEquals(e.getMessage(), "Internal error processing getId");
+        }
     }
 
     @BeforeTest
@@ -106,7 +122,7 @@ public class IdGenTest {
             for (int i = 0; i < tries; ++i) {
                 long id;
                 try {
-                    id = client.getId(testAgent);
+                    id = client.getId(testIdType);
                 } catch (TException e) {
                     e.printStackTrace();
                     continue;
