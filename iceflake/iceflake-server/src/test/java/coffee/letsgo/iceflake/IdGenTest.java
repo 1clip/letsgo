@@ -49,10 +49,7 @@ public class IdGenTest {
         pool.awaitTermination(10, TimeUnit.SECONDS);
 
         Assert.assertEquals(bucket.size(), threads * tries);
-        HashSet<Long> hs = new HashSet<>();
-        while (!bucket.isEmpty()) {
-            hs.add(bucket.poll());
-        }
+        HashSet<Long> hs = new HashSet<>(bucket);
         Assert.assertEquals(hs.size(), threads * tries);
     }
 
