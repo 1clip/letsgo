@@ -1,12 +1,10 @@
-package coffee.letsgo.iceflake;
+package coffee.letsgo.iceflake.server;
 
+import coffee.letsgo.iceflake.Iceflake;
+import coffee.letsgo.iceflake.config.IceflakeConfig;
 import com.facebook.nifty.client.FramedClientConnector;
 import com.facebook.swift.service.ThriftClientManager;
-import com.facebook.swift.service.ThriftServer;
 import com.google.common.net.HostAndPort;
-import com.google.inject.Binder;
-import com.google.inject.Guice;
-import com.google.inject.Module;
 import org.apache.thrift.TException;
 import org.jboss.netty.logging.InternalLoggerFactory;
 import org.jboss.netty.logging.Slf4JLoggerFactory;
@@ -23,7 +21,7 @@ import java.util.concurrent.*;
  */
 public class IdGenTest {
     private IceflakeConfig config;
-    private ThriftServer server;
+    private IceflakeServer server;
     private int testIdType = 89;
 
     @Test
@@ -56,14 +54,14 @@ public class IdGenTest {
     @Test
     public void testInvalidIdType() throws ExecutionException, InterruptedException {
         Iceflake client = buildClient();
-        try{
+        try {
             client.getId(-1);
             Assert.assertEquals(true, false);
         } catch (TException e) {
             Assert.assertEquals(e.getMessage(), "Internal error processing getId");
         }
 
-        try{
+        try {
             client.getId(1 << 7);
             Assert.assertEquals(true, false);
         } catch (TException e) {
@@ -74,27 +72,22 @@ public class IdGenTest {
     @BeforeTest
     public void setup() {
         InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
-        config = Guice.createInjector(
-                new Module() {
-                    @Override
-                    public void configure(Binder binder) {
-                        binder.bind(IceflakeConfig.class).to(DevConfig.class);
-                    }
-                }
-        ).getInstance(IceflakeConfig.class);
-
-        server = config.apply().start();
+        config = new IceflakeConfig();
+        server = IceflakeServer.apply(config);
+        server.start();
     }
 
     @AfterTest
     public void teardown() {
-        server.close();
+        server.shutdown();
     }
 
     private Iceflake buildClient() throws ExecutionException, InterruptedException {
         ThriftClientManager clientManager = new ThriftClientManager();
         return clientManager.createClient(
-                new FramedClientConnector(HostAndPort.fromParts("localhost", config.getServerPort())),
+                new FramedClientConnector(HostAndPort.fromParts(
+                        config.getServerName(),
+                        config.getServerPort())),
                 Iceflake.class).get();
     }
 

@@ -7,9 +7,9 @@
         <groupId>coffee.letsgo.iceflake</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>iceflake-server</artifactId>
+
+    <artifactId>iceflake-client</artifactId>
 
     <dependencies>
         <dependency>
@@ -19,7 +19,7 @@
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
-            <artifactId>server-swift</artifactId>
+            <artifactId>client-swift</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -46,6 +46,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.7</version>
+        </dependency>
+        <dependency>
+            <groupId>coffee.letsgo.iceflake</groupId>
+            <artifactId>iceflake-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -80,7 +86,7 @@
                 </executions>
                 <configuration>
                     <idlFiles>
-                        <directory>${basedir}/src/main/thrift</directory>
+                        <directory>${basedir}/../iceflake-server/src/main/thrift</directory>
                         <includes>
                             <include>iceflake.thrift</include>
                         </includes>

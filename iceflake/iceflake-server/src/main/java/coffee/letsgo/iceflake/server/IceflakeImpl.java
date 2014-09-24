@@ -1,5 +1,8 @@
-package coffee.letsgo.iceflake;
+package coffee.letsgo.iceflake.server;
 
+import coffee.letsgo.iceflake.Iceflake;
+import coffee.letsgo.iceflake.InvalidIdTypeError;
+import coffee.letsgo.iceflake.InvalidSystemClock;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 

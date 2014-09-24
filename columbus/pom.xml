@@ -8,13 +8,15 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>coffee.letsgo.iceflake</groupId>
-    <artifactId>iceflake-root</artifactId>
-    <packaging>pom</packaging>
 
+    <artifactId>columbus</artifactId>
+    <packaging>pom</packaging>
     <modules>
-        <module>iceflake-server</module>
-        <module>iceflake-client</module>
-        <module>iceflake-conf</module>
+        <module>service</module>
+        <module>server</module>
+        <module>client</module>
+        <module>server-swift</module>
+        <module>client-swift</module>
     </modules>
+
 </project>
