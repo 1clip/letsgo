@@ -1,6 +1,6 @@
 package coffee.letsgo.columbus.service.manager;
 
-import coffee.letsgo.columbus.service.exception.ServiceMgrException;
+import coffee.letsgo.columbus.service.exception.ServiceManagerException;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * Created by xbwu on 9/14/14.
  */
-public class ZkMgrTest {
+public class ZookeeperManagerTest {
     private ServiceManager manager;
     private String zkConnectStr = "localhost:2181";
     private String svcName;
@@ -28,7 +28,7 @@ public class ZkMgrTest {
     private Random random = new Random(System.currentTimeMillis());
 
     @Test
-    public void testAddRemoveNode() throws ServiceMgrException {
+    public void testAddRemoveNode() throws ServiceManagerException {
         String node = randomNodeName();
         manager.addNode(node);
         Assert.assertTrue(manager.isMember(node));
@@ -41,7 +41,7 @@ public class ZkMgrTest {
     }
 
     @Test
-    public void testEnableDisable() throws ServiceMgrException {
+    public void testEnableDisable() throws ServiceManagerException {
         String node = randomNodeName();
         manager.addNode(node);
         manager.activateNode(node);
@@ -55,7 +55,7 @@ public class ZkMgrTest {
     }
 
     @Test
-    public void testAutoDisable() throws ServiceMgrException {
+    public void testAutoDisable() throws ServiceManagerException {
         String node = randomNodeName();
         manager.addNode(node);
         Assert.assertTrue(manager.isMember(node));
@@ -68,7 +68,7 @@ public class ZkMgrTest {
     }
 
     @Test
-    public void testGetList() throws ServiceMgrException {
+    public void testGetList() throws ServiceManagerException {
         cleanupService();
         Set<String> nodes = new HashSet<String>();
         Collections.addAll(nodes,
@@ -98,14 +98,14 @@ public class ZkMgrTest {
     }
 
     @BeforeTest
-    public void setup() throws ServiceMgrException {
+    public void setup() throws ServiceManagerException {
         InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
         svcName = randomServiceName();
         manager = Guice.createInjector(
                 new Module() {
                     @Override
                     public void configure(Binder binder) {
-                        binder.bind(ServiceManager.class).to(ServiceMgrZkImpl.class);
+                        binder.bind(ServiceManager.class).to(ServiceManagerZookeeperImpl.class);
                         binder.bindConstant().annotatedWith(Names.named("service name")).to(svcName);
                         binder.bindConstant().annotatedWith(Names.named("connect string")).to(zkConnectStr);
                         binder.bindConstant().annotatedWith(Names.named("session timeout")).to(zkSessionTimeout);
@@ -116,7 +116,7 @@ public class ZkMgrTest {
     }
 
     @AfterTest
-    public void teardown() throws ServiceMgrException {
+    public void teardown() throws ServiceManagerException {
         manager.stop();
     }
 
@@ -128,7 +128,7 @@ public class ZkMgrTest {
         return String.format("testnode_%d:%d", random.nextInt(50), random.nextInt(100000));
     }
 
-    private void cleanupService() throws ServiceMgrException {
+    private void cleanupService() throws ServiceManagerException {
         for (String uri : manager.getActives()) {
             manager.deactivateNode(uri);
         }

@@ -2,7 +2,7 @@ package coffee.letsgo.columbus.service;
 
 import coffee.letsgo.columbus.service.exception.ServiceException;
 import coffee.letsgo.columbus.service.manager.ServiceManager;
-import coffee.letsgo.columbus.service.manager.ServiceMgrZkImpl;
+import coffee.letsgo.columbus.service.manager.ServiceManagerZookeeperImpl;
 import com.google.common.base.Function;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
@@ -19,8 +19,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-
-import static com.google.common.base.Verify.verify;
 
 /**
  * Created by xbwu on 9/14/14.
@@ -123,7 +121,7 @@ public class SvcDeamonTest {
         deamon = Guice.createInjector(new Module() {
             @Override
             public void configure(Binder binder) {
-                binder.bind(ServiceManager.class).to(ServiceMgrZkImpl.class);
+                binder.bind(ServiceManager.class).to(ServiceManagerZookeeperImpl.class);
                 binder.bindConstant().annotatedWith(Names.named("service name")).to(svcName);
                 binder.bindConstant().annotatedWith(Names.named("connect string")).to(zkConnectStr);
                 binder.bindConstant().annotatedWith(Names.named("session timeout")).to(zkSessionTimeout);

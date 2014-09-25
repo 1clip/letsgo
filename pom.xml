@@ -15,5 +15,6 @@
     <modules>
         <module>iceflake</module>
         <module>columbus</module>
+        <module>common</module>
     </modules>
 </project>

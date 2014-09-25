@@ -1,13 +1,17 @@
 package coffee.letsgo.iceflake.server;
 
 import coffee.letsgo.columbus.server.swift.SwiftServer;
-import coffee.letsgo.iceflake.config.IceflakeConfig;
-import coffee.letsgo.iceflake.config.IceflakeConstants;
+import coffee.letsgo.iceflake.config.IceflakeConfigException;
+import coffee.letsgo.iceflake.config.IceflakeConfigManager;
+import coffee.letsgo.iceflake.config.IceflakeWorkerConfig;
 import com.facebook.swift.service.guice.ThriftServiceExporter;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * Created by xbwu on 8/29/14.
@@ -24,8 +28,8 @@ public class IceflakeServer {
         this.serverPort = serverPort;
     }
 
-    public void start() {
-        server = new SwiftServer(IceflakeConstants.serviceName, serverPort, new Module() {
+    public void start() throws UnknownHostException, IceflakeConfigException {
+        server = new SwiftServer(IceflakeConfigManager.getInstance().getServiceName(), serverPort, new Module() {
             @Override
             public void configure(Binder binder) {
                 binder.bindConstant().annotatedWith(Names.named("worker id")).to(workerId);
@@ -43,13 +47,9 @@ public class IceflakeServer {
         }
     }
 
-    protected static IceflakeServer apply(IceflakeConfig config) {
-        return new IceflakeServer(
-                config.getWorkerId(),
-                config.getServerPort());
-    }
-
-    public static void main(String[] args) {
-        apply(new IceflakeConfig()).start();
+    public static void main(String[] args) throws UnknownHostException, IceflakeConfigException {
+        IceflakeWorkerConfig config = IceflakeConfigManager.getInstance()
+                .getWorkerConfig(InetAddress.getLocalHost().getCanonicalHostName());
+        new IceflakeServer(config.getId(), config.getPort()).start();
     }
 }
