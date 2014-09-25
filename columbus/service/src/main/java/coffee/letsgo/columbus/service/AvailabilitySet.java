@@ -47,147 +47,186 @@ public class AvailabilitySet {
         disabledSwitch.compareAndSet(true, false);
     }
 
+    private final DoStoreUpdate<Set<String>> updateMemberListActor =
+            new DoStoreUpdate<Set<String>>(new Function<Set<String>, Void>() {
+                @Override
+                public Void apply(Set<String> newMembers) {
+                    Set<String> toRemove = Sets.difference(members.keySet(), newMembers);
+                    removeMembers(toRemove);
+                    addMembers(newMembers);
+                    return null;
+                }
+            });
+
     public void updateMemberList(Set<String> newMembers) {
-        new DoStoreUpdate<Set<String>>(new Function<Set<String>, Void>() {
-            @Override
-            public Void apply(Set<String> newMembers) {
-                Set<String> toRemove = Sets.difference(members.keySet(), newMembers);
-                removeMembers(toRemove);
-                addMembers(newMembers);
-                return null;
-            }
-        }).apply(newMembers);
+        updateMemberListActor.apply(newMembers);
     }
+
+    private final DoStoreUpdate<Set<String>> updateActivesActor =
+            new DoStoreUpdate<Set<String>>(new Function<Set<String>, Void>() {
+                @Override
+                public Void apply(Set<String> actives) {
+                    Set<String> toDisable = Sets.difference(members.keySet(), actives);
+                    disable(toDisable);
+                    enable(actives);
+                    return null;
+                }
+            });
 
     public void updateActives(Set<String> actives) {
-        new DoStoreUpdate<Set<String>>(new Function<Set<String>, Void>() {
-            @Override
-            public Void apply(Set<String> actives) {
-                Set<String> toDisable = Sets.difference(members.keySet(), actives);
-                disable(toDisable);
-                enable(actives);
-                return null;
-            }
-        }).apply(actives);
+        updateActivesActor.apply(actives);
     }
+
+    private final DoStoreUpdate<String> addMemberActor =
+            new DoStoreUpdate<String>(new Function<String, Void>() {
+                @Override
+                public Void apply(String node) {
+                    members.putIfAbsent(node, NodeStatus.INACTIVE);
+                    return null;
+                }
+            });
 
     public void addMember(String node) {
-        new DoStoreUpdate<String>(new Function<String, Void>() {
-            @Override
-            public Void apply(String node) {
-                members.putIfAbsent(node, NodeStatus.INACTIVE);
-                return null;
-            }
-        }).apply(node);
+        addMemberActor.apply(node);
     }
+
+    private final DoStoreUpdate<String> removeMemberActor =
+            new DoStoreUpdate<String>(new Function<String, Void>() {
+                @Override
+                public Void apply(String node) {
+                    members.remove(node);
+                    return null;
+                }
+            });
 
     public void removeMember(String node) {
-        new DoStoreUpdate<String>(new Function<String, Void>() {
-            @Override
-            public Void apply(String node) {
-                members.remove(node);
-                return null;
-            }
-        }).apply(node);
+        removeMemberActor.apply(node);
     }
+
+    private final DoStoreUpdate<String> activateMemberActor =
+            new DoStoreUpdate<String>(new Function<String, Void>() {
+                @Override
+                public Void apply(String node) {
+                    members.put(node, NodeStatus.ACTIVE);
+                    return null;
+                }
+            });
 
     public void activateMember(String node) {
-        new DoStoreUpdate<String>(new Function<String, Void>() {
-            @Override
-            public Void apply(String node) {
-                members.put(node, NodeStatus.ACTIVE);
-                return null;
-            }
-        }).apply(node);
+        activateMemberActor.apply(node);
     }
+
+    private final DoStoreUpdate<String> deactivateMemberActor =
+            new DoStoreUpdate<String>(new Function<String, Void>() {
+                @Override
+                public Void apply(String node) {
+                    members.put(node, NodeStatus.INACTIVE);
+                    return null;
+                }
+            });
 
     public void deactivateMember(String node) {
-        new DoStoreUpdate<String>(new Function<String, Void>() {
-            @Override
-            public Void apply(String node) {
-                members.put(node, NodeStatus.INACTIVE);
-                return null;
-            }
-        }).apply(node);
+        deactivateMemberActor.apply(node);
     }
+
+    private final DoStoreRead<String, Boolean> isMemberActor =
+            new DoStoreRead<String, Boolean>(new Function<String, Boolean>() {
+                @Override
+                public Boolean apply(String node) {
+                    return members.containsKey(node);
+                }
+            });
 
     public boolean isMember(String node) {
-        return new DoStoreRead<String, Boolean>(new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(String node) {
-                return members.containsKey(node);
-            }
-        }).apply(node);
+        return isMemberActor.apply(node);
     }
+
+    private final DoStoreRead<String, Boolean> isActiveActor =
+            new DoStoreRead<String, Boolean>(new Function<String, Boolean>() {
+                @Override
+                public Boolean apply(String node) {
+                    return members.get(node) == NodeStatus.ACTIVE;
+                }
+            });
 
     public boolean isActive(String node) {
-        return new DoStoreRead<String, Boolean>(new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(String node) {
-                return members.get(node) == NodeStatus.ACTIVE;
-            }
-        }).apply(node);
+        return isActiveActor.apply(node);
     }
+
+    private final DoStoreRead<Void, Set<String>> getMembersActor =
+            new DoStoreRead<Void, Set<String>>(new Function<Void, Set<String>>() {
+                @Override
+                public Set<String> apply(Void input) {
+                    return FluentIterable.from(members.keySet())
+                            .toSet();
+                }
+            });
 
     public Set<String> getMembers() {
-        return new DoStoreRead<Void, Set<String>>(new Function<Void, Set<String>>() {
-            @Override
-            public Set<String> apply(Void input) {
-                return FluentIterable.from(members.keySet())
-                        .toSet();
-            }
-        }).apply(null);
+        return getMembersActor.apply(null);
     }
+
+    private final DoStoreRead<Void, Integer> countMembersActor =
+            new DoStoreRead<Void, Integer>(new Function<Void, Integer>() {
+                @Override
+                public Integer apply(Void input) {
+                    return members.size();
+                }
+            });
 
     public int countMembers() {
-        return new DoStoreRead<Void, Integer>(new Function<Void, Integer>() {
-            @Override
-            public Integer apply(Void input) {
-                return members.size();
-            }
-        }).apply(null);
+        return countMembersActor.apply(null);
     }
+
+    private final DoStoreRead<Void, Set<String>> getActivesActor =
+            new DoStoreRead<Void, Set<String>>(new Function<Void, Set<String>>() {
+                @Override
+                public Set<String> apply(Void input) {
+                    return FluentIterable.from(members.keySet())
+                            .filter(new Predicate<String>() {
+                                @Override
+                                public boolean apply(String input) {
+                                    return members.get(input) == NodeStatus.ACTIVE;
+                                }
+                            })
+                            .toSet();
+                }
+            });
 
     public Set<String> getActives() {
-        return new DoStoreRead<Void, Set<String>>(new Function<Void, Set<String>>() {
-            @Override
-            public Set<String> apply(Void input) {
-                return FluentIterable.from(members.keySet())
-                        .filter(new Predicate<String>() {
-                            @Override
-                            public boolean apply(String input) {
-                                return members.get(input) == NodeStatus.ACTIVE;
-                            }
-                        })
-                        .toSet();
-            }
-        }).apply(null);
+        return getActivesActor.apply(null);
     }
+
+    private final DoStoreRead<Void, Integer> countActivesActor =
+            new DoStoreRead<Void, Integer>(new Function<Void, Integer>() {
+                @Override
+                public Integer apply(Void input) {
+                    return FluentIterable.from(members.keySet())
+                            .filter(new Predicate<String>() {
+                                @Override
+                                public boolean apply(String input) {
+                                    return members.get(input) == NodeStatus.ACTIVE;
+                                }
+                            })
+                            .size();
+                }
+            });
 
     public int countActives() {
-        return new DoStoreRead<Void, Integer>(new Function<Void, Integer>() {
-            @Override
-            public Integer apply(Void input) {
-                return FluentIterable.from(members.keySet())
-                        .filter(new Predicate<String>() {
-                            @Override
-                            public boolean apply(String input) {
-                                return members.get(input) == NodeStatus.ACTIVE;
-                            }
-                        })
-                        .size();
-            }
-        }).apply(null);
+        return countActivesActor.apply(null);
     }
 
+    private final DoStoreUpdate<Void> clearActor =
+            new DoStoreUpdate<Void>(new Function<Void, Void>() {
+                @Override
+                public Void apply(Void input) {
+                    members.clear();
+                    return null;
+                }
+            });
+
     public void clear() {
-        new DoStoreUpdate<Void>(new Function<Void, Void>() {
-            @Override
-            public Void apply(Void input) {
-                members.clear();
-                return null;
-            }
-        }).apply(null);
+        clearActor.apply(null);
     }
 
     public long getLastUpdated() {

@@ -8,11 +8,13 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.*;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -36,7 +38,7 @@ public class ServiceDeamon {
     private CountDownLatch latch;
 
     private final ServiceContext serviceContext = new ServiceContext();
-    private final Set<String> activatedByMe = new HashSet<String>();
+    private final Set<String> activatedByMe = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
     @Inject
     public ServiceDeamon(@Named("service name") String serviceName, ServiceManager manager) {
@@ -51,15 +53,17 @@ public class ServiceDeamon {
         return uri;
     }
 
+    private final DoIfStarted<String, Void> addMemberActor =
+            new DoIfStarted<String, Void>(new Function<String, Void>() {
+                @Override
+                public Void apply(String uri) {
+                    manager.addNode(uri);
+                    return null;
+                }
+            });
+
     public String addMember(String uri) {
-        new DoIfStarted<String, Void>(new Function<String, Void>() {
-            @Override
-            public Void apply(String uri) {
-                manager.addNode(uri);
-                // availabilitySet.addMember(uri);
-                return null;
-            }
-        }).apply(uri);
+        addMemberActor.apply(uri);
         return uri;
     }
 
@@ -69,15 +73,17 @@ public class ServiceDeamon {
         return uri;
     }
 
+    private final DoIfStarted<String, Void> removeMemberActor =
+            new DoIfStarted<String, Void>(new Function<String, Void>() {
+                @Override
+                public Void apply(String uri) {
+                    manager.removeNode(uri);
+                    return null;
+                }
+            });
+
     public String removeMember(String uri) {
-        new DoIfStarted<String, Void>(new Function<String, Void>() {
-            @Override
-            public Void apply(String uri) {
-                manager.removeNode(uri);
-                // availabilitySet.removeMember(uri);
-                return null;
-            }
-        }).apply(uri);
+        removeMemberActor.apply(uri);
         return uri;
     }
 
@@ -85,13 +91,16 @@ public class ServiceDeamon {
         return isMember(localUriWithPort(port));
     }
 
+    private final DoIfStarted<String, Boolean> isMemberActor =
+            new DoIfStarted<String, Boolean>(new Function<String, Boolean>() {
+                @Override
+                public Boolean apply(String uri) {
+                    return availabilitySet.isMember(uri);
+                }
+            });
+
     public boolean isMember(String uri) {
-        return new DoIfStarted<String, Boolean>(new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(String uri) {
-                return availabilitySet.isMember(uri);
-            }
-        }).apply(uri);
+        return isMemberActor.apply(uri);
     }
 
     public String activate(int port) throws UnknownHostException {
@@ -100,15 +109,17 @@ public class ServiceDeamon {
         return uri;
     }
 
+    private final DoIfStarted<String, Void> activateActor =
+            new DoIfStarted<String, Void>(new Function<String, Void>() {
+                @Override
+                public Void apply(String uri) {
+                    manager.activateNode(uri);
+                    return null;
+                }
+            });
+
     public String activate(String uri) {
-        new DoIfStarted<String, Void>(new Function<String, Void>() {
-            @Override
-            public Void apply(String uri) {
-                manager.activateNode(uri);
-                // availabilitySet.activateMember(uri);
-                return null;
-            }
-        }).apply(uri);
+        activateActor.apply(uri);
         activatedByMe.add(uri);
         return uri;
     }
@@ -119,15 +130,17 @@ public class ServiceDeamon {
         return uri;
     }
 
+    private final DoIfStarted<String, Void> deactivateActor =
+            new DoIfStarted<String, Void>(new Function<String, Void>() {
+                @Override
+                public Void apply(String uri) {
+                    manager.deactivateNode(uri);
+                    return null;
+                }
+            });
+
     public String deactivate(String uri) {
-        new DoIfStarted<String, Void>(new Function<String, Void>() {
-            @Override
-            public Void apply(String uri) {
-                manager.deactivateNode(uri);
-                // availabilitySet.deactivateMember(uri);
-                return null;
-            }
-        }).apply(uri);
+        deactivateActor.apply(uri);
         activatedByMe.remove(uri);
         return uri;
     }
@@ -136,13 +149,16 @@ public class ServiceDeamon {
         return isActive(localUriWithPort(port));
     }
 
+    private final DoIfStarted<String, Boolean> isActiveActor =
+            new DoIfStarted<String, Boolean>(new Function<String, Boolean>() {
+                @Override
+                public Boolean apply(String uri) {
+                    return availabilitySet.isActive(uri);
+                }
+            });
+
     public boolean isActive(String uri) {
-        return new DoIfStarted<String, Boolean>(new Function<String, Boolean>() {
-            @Override
-            public Boolean apply(String uri) {
-                return availabilitySet.isActive(uri);
-            }
-        }).apply(uri);
+        return isActiveActor.apply(uri);
     }
 
     private String localUriWithPort(int port) throws UnknownHostException {
@@ -155,62 +171,65 @@ public class ServiceDeamon {
         return availabilitySet;
     }
 
-    public void start() {
-        new DoIfNotStarted<Void, Void>(new Function<Void, Void>() {
-            @Override
-            public Void apply(Void input) {
-                if (startedSwitch.compareAndSet(false, true)) {
-                    logger.info("starting deamon");
-                    latch = new CountDownLatch(1);
-                    manager.start();
+    private final DoIfNotStarted<Void, Void> startActor =
+            new DoIfNotStarted<Void, Void>(new Function<Void, Void>() {
+                @Override
+                public Void apply(Void input) {
+                    if (startedSwitch.compareAndSet(false, true)) {
+                        logger.info("starting deamon");
+                        latch = new CountDownLatch(1);
+                        manager.start();
+                    }
+                    return null;
                 }
-                return null;
-            }
-        }).apply(null);
+            });
+
+    public void start() {
+        startActor.apply(null);
     }
 
-    public void shutdown() {
-        new DoIfStarted<Void, Void>(new Function<Void, Void>() {
-            @Override
-            public Void apply(Void input) {
-                if (startedSwitch.compareAndSet(true, false)) {
-                    availabilitySet.disableAvailabilitySet();
-                    logger.info("shutting down deamon");
-                    scheduler.shutdown();
-                    manager.stop();
-                    availabilitySet.clear();
-                    latch = null;
+    private final DoIfStarted<Void, Void> shutdownActor =
+            new DoIfStarted<Void, Void>(new Function<Void, Void>() {
+                @Override
+                public Void apply(Void input) {
+                    if (startedSwitch.compareAndSet(true, false)) {
+                        availabilitySet.disableAvailabilitySet();
+                        logger.info("shutting down deamon");
+                        scheduler.shutdown();
+                        manager.stop();
+                        availabilitySet.clear();
+                        latch = null;
+                    }
+                    return null;
                 }
-                return null;
-            }
-        }).apply(null);
+            });
+
+    public void shutdown() {
+        shutdownActor.apply(null);
     }
 
     public void awaitInitialized() {
-        new DoIfStarted<Void, Void>(new Function<Void, Void>() {
-            @Override
-            public Void apply(Void input) {
-                Uninterruptibles.awaitUninterruptibly(latch);
-                return null;
-            }
-        }).apply(null);
+        awaitInitialized(5 * 60 * 1000);
     }
 
+    private final DoIfStarted<Long, Void> awaitInitializedActor =
+            new DoIfStarted<Long, Void>(new Function<Long, Void>() {
+                @Override
+                public Void apply(Long timeoutMillis) {
+                    Uninterruptibles.awaitUninterruptibly(latch, timeoutMillis, TimeUnit.MILLISECONDS);
+                    return null;
+                }
+            });
+
     public void awaitInitialized(long timeoutMillis) {
-        new DoIfStarted<Long, Void>(new Function<Long, Void>() {
-            @Override
-            public Void apply(Long timeoutMillis) {
-                Uninterruptibles.awaitUninterruptibly(latch, timeoutMillis, TimeUnit.MILLISECONDS);
-                return null;
-            }
-        }).apply(timeoutMillis);
+        awaitInitializedActor.apply(timeoutMillis);
     }
 
     public long getAvailabilitySetLastUpdated() {
         return availabilitySet.getLastUpdated();
     }
 
-    Callable<AvailabilitySummary> loadAll = new Callable<AvailabilitySummary>() {
+    private final Callable<AvailabilitySummary> loadAll = new Callable<AvailabilitySummary>() {
         @Override
         public AvailabilitySummary call() throws Exception {
             Set<String> members = manager.getAllNodes();
@@ -221,7 +240,7 @@ public class ServiceDeamon {
         }
     };
 
-    Callable<AvailabilitySummary> loadMembers = new Callable<AvailabilitySummary>() {
+    private final Callable<AvailabilitySummary> loadMembers = new Callable<AvailabilitySummary>() {
         @Override
         public AvailabilitySummary call() throws Exception {
             Set<String> members = manager.getAllNodes();
@@ -230,7 +249,7 @@ public class ServiceDeamon {
         }
     };
 
-    Callable<AvailabilitySummary> loadActives = new Callable<AvailabilitySummary>() {
+    private final Callable<AvailabilitySummary> loadActives = new Callable<AvailabilitySummary>() {
         @Override
         public AvailabilitySummary call() throws Exception {
             Set<String> actives = manager.getActives();
@@ -239,37 +258,39 @@ public class ServiceDeamon {
         }
     };
 
-    FutureCallback<AvailabilitySummary> loadAllCallback = new FutureCallback<AvailabilitySummary>() {
-        @Override
-        public void onSuccess(AvailabilitySummary result) {
-            logger.debug("[{}] availability set all loaded, {}/{} node(s) active",
-                    serviceName, result.getActives(), result.getTotal());
-            serviceContext.process(ServiceEvent.UPDATED_ALL);
-            availabilitySet.enableAvailablilitySet();
-            latch.countDown();
-        }
+    private final FutureCallback<AvailabilitySummary> loadAllCallback =
+            new FutureCallback<AvailabilitySummary>() {
+                @Override
+                public void onSuccess(AvailabilitySummary result) {
+                    logger.debug("[{}] availability set all loaded, {}/{} node(s) active",
+                            serviceName, result.getActives(), result.getTotal());
+                    serviceContext.process(ServiceEvent.UPDATED_ALL);
+                    availabilitySet.enableAvailablilitySet();
+                    latch.countDown();
+                }
 
-        @Override
-        public void onFailure(Throwable t) {
-            logger.error("[{}] failed to load-all availability set", serviceName, t);
-            serviceContext.process(ServiceEvent.UPDATE_FAILED);
-        }
-    };
+                @Override
+                public void onFailure(Throwable t) {
+                    logger.error("[{}] failed to load-all availability set", serviceName, t);
+                    serviceContext.process(ServiceEvent.UPDATE_FAILED);
+                }
+            };
 
-    FutureCallback<AvailabilitySummary> loadAvailabilityCallback = new FutureCallback<AvailabilitySummary>() {
-        @Override
-        public void onSuccess(AvailabilitySummary summary) {
-            logger.debug("[{}] availability set loaded, {}/{} node(s) active",
-                    serviceName, summary.getActives(), summary.getTotal());
-            serviceContext.process(ServiceEvent.UPDATED);
-        }
+    private final FutureCallback<AvailabilitySummary> loadAvailabilityCallback =
+            new FutureCallback<AvailabilitySummary>() {
+                @Override
+                public void onSuccess(AvailabilitySummary summary) {
+                    logger.debug("[{}] availability set loaded, {}/{} node(s) active",
+                            serviceName, summary.getActives(), summary.getTotal());
+                    serviceContext.process(ServiceEvent.UPDATED);
+                }
 
-        @Override
-        public void onFailure(Throwable t) {
-            logger.error("[{}] failed to load availability set", serviceName, t);
-            serviceContext.process(ServiceEvent.UPDATE_FAILED);
-        }
-    };
+                @Override
+                public void onFailure(Throwable t) {
+                    logger.error("[{}] failed to load availability set", serviceName, t);
+                    serviceContext.process(ServiceEvent.UPDATE_FAILED);
+                }
+            };
 
     private void activateAll() {
         for (String uri : activatedByMe) {
@@ -295,7 +316,7 @@ public class ServiceDeamon {
         Futures.addCallback(reload, loadAvailabilityCallback);
     }
 
-    Function<ServiceEvent, Void> eventHandler = new Function<ServiceEvent, Void>() {
+    private final Function<ServiceEvent, Void> eventHandler = new Function<ServiceEvent, Void>() {
         @Override
         public Void apply(ServiceEvent event) {
             logger.debug("service mgr event received: {}", event.name());
