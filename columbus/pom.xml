@@ -12,9 +12,9 @@
     <artifactId>columbus</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>service</module>
-        <module>server</module>
-        <module>client</module>
+        <module>columbus-service</module>
+        <module>columbus-server</module>
+        <module>columbus-client</module>
         <module>server-swift</module>
         <module>client-swift</module>
     </modules>
