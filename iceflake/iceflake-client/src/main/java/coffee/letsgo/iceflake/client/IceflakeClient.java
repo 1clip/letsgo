@@ -18,7 +18,7 @@ public class IceflakeClient {
     private Iceflake clientProxy;
     private final Logger logger = LoggerFactory.getLogger(IceflakeClient.class);
 
-    public static IceflakeClient getInstance() throws IceflakeClientException {
+    public static IceflakeClient getInstance()  {
         if (IceflakeClientHolder.Instance.isCrap()) {
             throw new IceflakeClientException("crap iceflake client");
         }

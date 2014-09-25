@@ -3,7 +3,7 @@ package coffee.letsgo.iceflake.client;
 /**
  * Created by xbwu on 9/21/14.
  */
-public class IceflakeClientException extends Exception{
+public class IceflakeClientException extends RuntimeException {
     public IceflakeClientException() {
         super();
     }
