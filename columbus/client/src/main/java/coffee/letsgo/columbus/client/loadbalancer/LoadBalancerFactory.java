@@ -12,8 +12,6 @@ public class LoadBalancerFactory<C> {
     public LoadBalancer<C> getLoadbalancer(final Class<? extends LoadBalancer> lbClazz,
                                            final AvailabilitySet availabilitySet,
                                            final Function<String, ListenableFuture> tunnelCreator) {
-        return new RoundrobinBalancer<C>(availabilitySet, tunnelCreator);
-        /*
         return Guice.createInjector(new Module() {
             @Override
             public void configure(Binder binder) {
@@ -25,7 +23,5 @@ public class LoadBalancerFactory<C> {
                         .toInstance(tunnelCreator);
             }
         }).getInstance(LoadBalancer.class);
-        */
     }
-
 }
