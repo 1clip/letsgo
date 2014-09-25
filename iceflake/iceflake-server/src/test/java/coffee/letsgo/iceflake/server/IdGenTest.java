@@ -1,7 +1,9 @@
 package coffee.letsgo.iceflake.server;
 
 import coffee.letsgo.iceflake.Iceflake;
-import coffee.letsgo.iceflake.config.IceflakeConfig;
+import coffee.letsgo.iceflake.config.IceflakeConfigException;
+import coffee.letsgo.iceflake.config.IceflakeConfigManager;
+import coffee.letsgo.iceflake.config.IceflakeWorkerConfig;
 import com.facebook.nifty.client.FramedClientConnector;
 import com.facebook.swift.service.ThriftClientManager;
 import com.google.common.net.HostAndPort;
@@ -13,6 +15,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.concurrent.*;
 
@@ -20,14 +23,14 @@ import java.util.concurrent.*;
  * Created by xbwu on 8/30/14.
  */
 public class IdGenTest {
-    private IceflakeConfig config;
+    private IceflakeWorkerConfig config;
     private IceflakeServer server;
     private int testIdType = 89;
 
     @Test
     public void testIdGeneration() throws ExecutionException, InterruptedException, TException {
         Iceflake client = buildClient();
-        Assert.assertEquals(client.getWorkerId(), config.getWorkerId());
+        Assert.assertEquals(client.getWorkerId(), config.getId());
         long t1 = System.currentTimeMillis();
         long t = client.getTimestamp();
         long t2 = System.currentTimeMillis();
@@ -70,10 +73,10 @@ public class IdGenTest {
     }
 
     @BeforeTest
-    public void setup() {
+    public void setup() throws IceflakeConfigException, UnknownHostException {
         InternalLoggerFactory.setDefaultFactory(new Slf4JLoggerFactory());
-        config = new IceflakeConfig();
-        server = IceflakeServer.apply(config);
+        config = new IceflakeWorkerConfig("localhost", 7609, 11);
+        server = new IceflakeServer(config.getId(), config.getPort());
         server.start();
     }
 
@@ -86,8 +89,8 @@ public class IdGenTest {
         ThriftClientManager clientManager = new ThriftClientManager();
         return clientManager.createClient(
                 new FramedClientConnector(HostAndPort.fromParts(
-                        config.getServerName(),
-                        config.getServerPort())),
+                        config.getWorker(),
+                        config.getPort())),
                 Iceflake.class).get();
     }
 

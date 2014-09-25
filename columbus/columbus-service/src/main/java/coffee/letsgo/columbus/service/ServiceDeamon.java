@@ -1,6 +1,6 @@
 package coffee.letsgo.columbus.service;
 
-import coffee.letsgo.columbus.service.exception.ServiceMgrRuntimeException;
+import coffee.letsgo.columbus.service.exception.ServiceManagerRuntimeException;
 import coffee.letsgo.columbus.service.manager.ServiceManager;
 import coffee.letsgo.columbus.service.model.ServiceContext;
 import coffee.letsgo.columbus.service.model.ServiceEvent;
@@ -8,14 +8,12 @@ import com.google.common.base.Function;
 import com.google.common.util.concurrent.*;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -346,7 +344,7 @@ public class ServiceDeamon {
 
         F apply(T input) {
             if (!startedSwitch.get()) {
-                throw new ServiceMgrRuntimeException("deamon not started");
+                throw new ServiceManagerRuntimeException("deamon not started");
             }
             return func.apply(input);
         }
@@ -361,7 +359,7 @@ public class ServiceDeamon {
 
         F apply(T input) {
             if (startedSwitch.get()) {
-                throw new ServiceMgrRuntimeException("deamon is started");
+                throw new ServiceManagerRuntimeException("deamon is started");
             }
             return func.apply(input);
         }

@@ -1,11 +1,14 @@
 package coffee.letsgo.iceflake.client;
 
+import coffee.letsgo.iceflake.config.IceflakeConfigException;
 import coffee.letsgo.iceflake.server.IceflakeServer;
 import junit.framework.Assert;
 import org.apache.thrift.TException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import java.net.UnknownHostException;
 
 /**
  * Created by xbwu on 9/23/14.
@@ -19,11 +22,11 @@ public class IceflakeClientTest {
 
     @Test
     public void testIdGeneration() throws TException {
-        Assert.assertTrue(client.id(IdType.ACCT_ID) > 0);
+        Assert.assertTrue(client.generateId(IdType.ACCT_ID) > 0);
     }
 
     @BeforeTest
-    public void setup() throws IceflakeClientException {
+    public void setup() throws IceflakeClientException, IceflakeConfigException, UnknownHostException {
         server = new IceflakeServer(serverId, serverPort);
         server.start();
         client = IceflakeClient.getInstance();

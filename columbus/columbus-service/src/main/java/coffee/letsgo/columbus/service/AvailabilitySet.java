@@ -1,7 +1,7 @@
 package coffee.letsgo.columbus.service;
 
 import coffee.letsgo.columbus.service.exception.AvailabilitySetNotAvailableException;
-import coffee.letsgo.columbus.service.exception.ServiceMgrRuntimeException;
+import coffee.letsgo.columbus.service.exception.ServiceManagerRuntimeException;
 import coffee.letsgo.columbus.service.model.NodeStatus;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -278,7 +278,7 @@ public class AvailabilitySet {
                 func.apply(input);
                 lastUpdated = System.currentTimeMillis();
             } catch (Exception e) {
-                throw new ServiceMgrRuntimeException("failed to sync availability set store", e);
+                throw new ServiceManagerRuntimeException("failed to sync availability set store", e);
             } finally {
                 wlock.unlock();
             }
@@ -308,7 +308,7 @@ public class AvailabilitySet {
             try {
                 return func.apply(input);
             } catch (Exception e) {
-                throw new ServiceMgrRuntimeException("failed to sync availability set store", e);
+                throw new ServiceManagerRuntimeException("failed to sync availability set store", e);
             } finally {
                 rlock.unlock();
             }

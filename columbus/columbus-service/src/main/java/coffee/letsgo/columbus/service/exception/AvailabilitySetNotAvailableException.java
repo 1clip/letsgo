@@ -3,7 +3,7 @@ package coffee.letsgo.columbus.service.exception;
 /**
  * Created by xbwu on 9/21/14.
  */
-public class AvailabilitySetNotAvailableException extends ServiceMgrRuntimeException {
+public class AvailabilitySetNotAvailableException extends ServiceManagerRuntimeException {
     public AvailabilitySetNotAvailableException() {
         super();
     }

@@ -5,7 +5,7 @@ import coffee.letsgo.columbus.client.loadbalancer.LoadBalancerFactory;
 import coffee.letsgo.columbus.client.loadbalancer.RandomBalancer;
 import coffee.letsgo.columbus.service.ServiceDeamon;
 import coffee.letsgo.columbus.service.manager.ServiceManager;
-import coffee.letsgo.columbus.service.manager.ServiceMgrZkImpl;
+import coffee.letsgo.columbus.service.manager.ServiceManagerZookeeperImpl;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -63,7 +63,7 @@ public class ClumbusClient {
         ServiceDeamon serviceDeamon = Guice.createInjector(new Module() {
             @Override
             public void configure(Binder binder) {
-                binder.bind(ServiceManager.class).to(ServiceMgrZkImpl.class);
+                binder.bind(ServiceManager.class).to(ServiceManagerZookeeperImpl.class);
                 binder.bindConstant().annotatedWith(Names.named("service name")).to(serviceName);
             }
         }).getInstance(ServiceDeamon.class);

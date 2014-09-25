@@ -1,9 +1,9 @@
 package coffee.letsgo.columbus.server;
 
-import coffee.letsgo.columbus.server.exception.ColumbusSvrRuntimeException;
+import coffee.letsgo.columbus.server.exception.ColumbusServerRuntimeException;
 import coffee.letsgo.columbus.service.ServiceDeamon;
 import coffee.letsgo.columbus.service.manager.ServiceManager;
-import coffee.letsgo.columbus.service.manager.ServiceMgrZkImpl;
+import coffee.letsgo.columbus.service.manager.ServiceManagerZookeeperImpl;
 import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Module;
@@ -37,7 +37,7 @@ public abstract class ColumbusServer {
         serviceDeamon = Guice.createInjector(new Module() {
             @Override
             public void configure(Binder binder) {
-                binder.bind(ServiceManager.class).to(ServiceMgrZkImpl.class);
+                binder.bind(ServiceManager.class).to(ServiceManagerZookeeperImpl.class);
                 binder.bindConstant().annotatedWith(Names.named("service name")).to(verifyNotNull(serviceName));
             }
         }).getInstance(ServiceDeamon.class);
@@ -56,7 +56,7 @@ public abstract class ColumbusServer {
             logger.error("failed to start columbus server " + serviceUri, ex);
             serviceDeamon.deactivate(serviceUri);
             serviceDeamon.shutdown();
-            throw new ColumbusSvrRuntimeException("failed to start columbus server", ex);
+            throw new ColumbusServerRuntimeException("failed to start columbus server", ex);
         }
     }
 
@@ -79,13 +79,13 @@ public abstract class ColumbusServer {
             logger.error("failed to shutdown service deamon for " + serviceName, ex);
         }
         if (startedSwitch) {
-            throw new ColumbusSvrRuntimeException("failed to shutdown columbus server");
+            throw new ColumbusServerRuntimeException("failed to shutdown columbus server");
         }
         try {
             stop();
         } catch (Exception ex) {
             logger.error("failed to stop concrete server", ex);
-            throw new ColumbusSvrRuntimeException("failed to stop concrete server", ex);
+            throw new ColumbusServerRuntimeException("failed to stop concrete server", ex);
         }
     }
 }

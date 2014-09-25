@@ -1,8 +1,8 @@
 package coffee.letsgo.columbus.service.manager;
 
-import coffee.letsgo.columbus.service.exception.ServiceMgrRuntimeException;
+import coffee.letsgo.columbus.service.exception.ServiceManagerRuntimeException;
 import coffee.letsgo.columbus.service.model.ServiceEvent;
-import coffee.letsgo.columbus.service.util.Configuration;
+import coffee.letsgo.common.ConfigurationReader;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -10,7 +10,10 @@ import org.apache.zookeeper.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.google.common.base.Verify.verifyNotNull;
@@ -18,7 +21,7 @@ import static com.google.common.base.Verify.verifyNotNull;
 /**
  * Created by xbwu on 9/7/14.
  */
-public class ServiceMgrZkImpl implements ServiceManager {
+public class ServiceManagerZookeeperImpl implements ServiceManager {
     private final String serviceName;
     private final String connectionString;
     private final int sessionTimeout;
@@ -34,7 +37,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
 
     private final AtomicBoolean zkConnected = new AtomicBoolean(false);
 
-    private final Logger logger = LoggerFactory.getLogger(ServiceMgrZkImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(ServiceManagerZookeeperImpl.class);
 
     private final String zkConnectStrKey = "columbus.service.zk.ConnectString";
     private final String zkConnectTimeout = "columbus.service.zk.ConnectTimeout";
@@ -44,10 +47,13 @@ public class ServiceMgrZkImpl implements ServiceManager {
     private ZooKeeper zk = null;
 
     @Inject
-    public ServiceMgrZkImpl(@Named("service name") String serviceName) {
+    public ServiceManagerZookeeperImpl(@Named("service name") String serviceName) {
+        ConfigurationReader configurationReader = new ConfigurationReader("columbus");
         this.serviceName = serviceName;
-        this.connectionString = verifyNotNull(Configuration.read(zkConnectStrKey, zkConnectStrDefaultVal));
-        this.sessionTimeout = Integer.parseInt(verifyNotNull(Configuration.read(zkConnectTimeout, zkConnectTimeoutDefaultVal)));
+        this.connectionString = verifyNotNull(
+                configurationReader.read(zkConnectStrKey, zkConnectStrDefaultVal));
+        this.sessionTimeout = Integer.parseInt(verifyNotNull(
+                configurationReader.read(zkConnectTimeout, zkConnectTimeoutDefaultVal)));
         this.zkNodeService = this.zkServicesRoot + "/" + this.serviceName;
         this.zkNodeMembers = this.zkNodeService + "/mbr";
         this.zkNodeActives = this.zkNodeService + "/act";
@@ -73,7 +79,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         logger.debug("[{}] already a member of service [{}]", uri, serviceName);
                         return false;
                     } else {
-                        throw new ServiceMgrRuntimeException(
+                        throw new ServiceManagerRuntimeException(
                                 String.format("failed to add [%s] as member of service [%s]", uri, serviceName),
                                 e);
                     }
@@ -102,7 +108,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         logger.debug("[{}] not a member of service [{}]", uri, serviceName);
                         return false;
                     } else {
-                        throw new ServiceMgrRuntimeException(
+                        throw new ServiceManagerRuntimeException(
                                 String.format("failed to delete [%s] from service [%s]", uri, serviceName),
                                 e);
                     }
@@ -122,7 +128,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
             @Override
             public Boolean apply(String uri) {
                 if (!isMember(uri)) {
-                    throw new ServiceMgrRuntimeException("[%s] is not a member of service [%s], could not activate",
+                    throw new ServiceManagerRuntimeException("[%s] is not a member of service [%s], could not activate",
                             uri, serviceName);
                 }
                 String p = getActivePath(uri);
@@ -140,7 +146,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         logger.debug("[{}] is already active for service [{}]", uri, serviceName);
                         return false;
                     } else {
-                        throw new ServiceMgrRuntimeException(
+                        throw new ServiceManagerRuntimeException(
                                 String.format("failed to activate [%s] for service [%s]", uri, serviceName),
                                 e);
                     }
@@ -173,7 +179,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         logger.debug("[{}] is not active for service [{}]", uri, serviceName);
                         return false;
                     } else {
-                        throw new ServiceMgrRuntimeException(
+                        throw new ServiceManagerRuntimeException(
                                 String.format("failed to deactivate [%s] from service [%s]", uri, serviceName),
                                 e);
                     }
@@ -201,7 +207,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         logger.debug("no member found for service [{}]", serviceName);
                         return new HashSet<String>();
                     }
-                    throw new ServiceMgrRuntimeException(
+                    throw new ServiceManagerRuntimeException(
                             String.format("failed to get member nodes of service [%s]", serviceName),
                             e);
                 }
@@ -224,7 +230,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         logger.debug("no active member found for service [{}]", serviceName);
                         return new HashSet<String>();
                     }
-                    throw new ServiceMgrRuntimeException(
+                    throw new ServiceManagerRuntimeException(
                             String.format("failed to get actives of service [%s]", serviceName),
                             e);
                 }
@@ -239,7 +245,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
         try {
             zk = new ZooKeeper(connectionString, sessionTimeout, eventWatcher);
         } catch (Exception e) {
-            throw new ServiceMgrRuntimeException(
+            throw new ServiceManagerRuntimeException(
                     String.format("failed to connect to zk server [%s]", connectionString),
                     e);
         }
@@ -289,7 +295,7 @@ public class ServiceMgrZkImpl implements ServiceManager {
                     ((KeeperException) e).code() == KeeperException.Code.NODEEXISTS) {
                 logger.debug("zk path [{}] already exists", path);
             } else {
-                throw new ServiceMgrRuntimeException(
+                throw new ServiceManagerRuntimeException(
                         String.format("failed to create zk path [%s]", path),
                         e);
             }
@@ -432,12 +438,12 @@ public class ServiceMgrZkImpl implements ServiceManager {
                         if (cause != null) {
                             logger.info("connection not ready, retry...");
                         } else {
-                            throw new ServiceMgrRuntimeException(e);
+                            throw new ServiceManagerRuntimeException(e);
                         }
                     }
                 }
             }
-            throw new ServiceMgrRuntimeException("zk never connected");
+            throw new ServiceManagerRuntimeException("zk never connected");
         }
     }
 }
