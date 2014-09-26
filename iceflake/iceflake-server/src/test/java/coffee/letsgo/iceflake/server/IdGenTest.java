@@ -2,7 +2,6 @@ package coffee.letsgo.iceflake.server;
 
 import coffee.letsgo.iceflake.Iceflake;
 import coffee.letsgo.iceflake.config.IceflakeConfigException;
-import coffee.letsgo.iceflake.config.IceflakeConfigManager;
 import coffee.letsgo.iceflake.config.IceflakeWorkerConfig;
 import com.facebook.nifty.client.FramedClientConnector;
 import com.facebook.swift.service.ThriftClientManager;

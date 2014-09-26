@@ -2,7 +2,6 @@ package coffee.letsgo.iceflake.client;
 
 import coffee.letsgo.columbus.client.swift.SwiftClient;
 import coffee.letsgo.iceflake.Iceflake;
-import coffee.letsgo.iceflake.config.IceflakeConfigManager;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,7 @@ public class IceflakeClient {
 
     private IceflakeClient() {
         try {
-            clientProxy = new SwiftClient<Iceflake>(IceflakeConfigManager.getInstance().getServiceName())
+            clientProxy = new SwiftClient<Iceflake>("iceflake")
                     .createClient(Iceflake.class).get();
         } catch (Exception ex) {
             logger.error("failed to create client proxy", ex);
