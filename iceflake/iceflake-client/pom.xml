@@ -13,11 +13,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>coffee.letsgo.iceflake</groupId>
-            <artifactId>iceflake-conf</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>client-swift</artifactId>
             <version>${project.version}</version>

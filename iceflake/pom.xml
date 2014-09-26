@@ -15,6 +15,5 @@
     <modules>
         <module>iceflake-server</module>
         <module>iceflake-client</module>
-        <module>iceflake-conf</module>
     </modules>
 </project>

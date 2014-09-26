@@ -1,9 +1,7 @@
 package coffee.letsgo.iceflake.config;
 
 import coffee.letsgo.common.ConfigurationReader;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
