@@ -1,5 +1,6 @@
 package coffee.letsgo.gateway;
 
+import coffee.letsgo.gateway.util.Constants;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
@@ -23,7 +24,7 @@ public class GatewayServer {
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new GatewayServerInitializer());
 
-            Channel ch = b.bind(8080).sync().channel();
+            Channel ch = b.bind(Constants.gatewayPort).sync().channel();
 
             ch.closeFuture().sync();
         } finally {

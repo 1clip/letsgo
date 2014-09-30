@@ -40,7 +40,7 @@ public class ApiVersionHandler extends ChannelInboundHandlerAdapter {
             throw new ApiVersionException("incorrect version format", ex);
         }
         attr.set(ver);
-        req.setUri(versionMatcher.group(2));
+        req.setUri(versionMatcher.group(2).trim().toLowerCase());
         ctx.fireChannelRead(req);
     }
 }
