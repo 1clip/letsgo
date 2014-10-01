@@ -36,7 +36,7 @@ public class IdentityClient {
         return clientProxy.getUser(userId);
     }
 
-    public long postUser(User userInfo) throws TException {
-        return clientProxy.postUser(userInfo);
+    public long createUser(User userInfo) throws TException {
+        return clientProxy.createUser(userInfo);
     }
 }
