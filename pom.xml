@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <thrift.root>${project.build.directory}/src/main/thrift</thrift.root>
+        <thrift.root>${project.basedir}/src/main/thrift</thrift.root>
     </properties>
     
     <modules>

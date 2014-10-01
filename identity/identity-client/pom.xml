@@ -12,6 +12,10 @@
     <groupId>coffee.letsgo</groupId>
     <artifactId>identity-client</artifactId>
 
+    <properties>
+        <thrift.root>${project.parent.parent.basedir}/src/main/thrift</thrift.root>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
@@ -77,7 +81,7 @@
                 </executions>
                 <configuration>
                     <idlFiles>
-                        <directory>${basedir}/../identity-server/src/main/thrift</directory>
+                        <directory>${thrift.root}</directory>
                         <includes>
                             <include>identity.thrift</include>
                         </includes>

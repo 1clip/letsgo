@@ -11,6 +11,10 @@
 
     <artifactId>identity-server</artifactId>
 
+    <properties>
+        <thrift.root>${project.parent.parent.basedir}/src/main/thrift</thrift.root>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>coffee.letsgo.iceflake</groupId>
@@ -80,7 +84,7 @@
                 </executions>
                 <configuration>
                     <idlFiles>
-                        <directory>${basedir}/src/main/thrift</directory>
+                        <directory>${thrift.root}</directory>
                         <includes>
                             <include>identity.thrift</include>
                         </includes>
