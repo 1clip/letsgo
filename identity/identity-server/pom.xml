@@ -5,11 +5,15 @@
     <parent>
         <artifactId>identity</artifactId>
         <groupId>coffee.letsgo</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>identity-server</artifactId>
+
+    <properties>
+        <thrift.root>${project.parent.parent.basedir}/src/main/thrift</thrift.root>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -80,7 +84,7 @@
                 </executions>
                 <configuration>
                     <idlFiles>
-                        <directory>${basedir}/src/main/thrift</directory>
+                        <directory>${thrift.root}</directory>
                         <includes>
                             <include>identity.thrift</include>
                         </includes>

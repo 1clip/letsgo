@@ -5,12 +5,16 @@
     <parent>
         <artifactId>letsgo-coffee</artifactId>
         <groupId>coffee.letsgo</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>coffee.letsgo.iceflake</groupId>
     <artifactId>iceflake-root</artifactId>
     <packaging>pom</packaging>
+
+    <properties>
+        <thrift.root>${project.parent.basedir}/src/main/thrift</thrift.root>
+    </properties>
 
     <modules>
         <module>iceflake-server</module>

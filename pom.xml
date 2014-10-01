@@ -6,10 +6,11 @@
     <groupId>coffee.letsgo</groupId>
     <artifactId>letsgo-coffee</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <thrift.root>${project.basedir}/src/main/thrift</thrift.root>
     </properties>
     
     <modules>
