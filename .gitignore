@@ -1,9 +1,10 @@
 ### system files
 .DS_Store
 
-### intellij files
+### tool generated files
 .idea/
 *.iml
+*.orig
 
 ### generated files
 target/

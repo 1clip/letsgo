@@ -2,14 +2,15 @@ namespace java.swift coffee.letsgo.identity
 
 struct User {
   1: string name,
-  2: string nick_name,
+  2: string friendly_name,
   3: byte gender,
   4: string dob,
-  5: i64 avatarId,
-  6: string phone,
-  7: byte registrationSource,
-  8: optional string registrationToken
-  9: optional i64 id
+  5: optional i64 avatar_id,
+  6: optional string avatar_token,
+  7: string cell_phone,
+  8: byte registration_source,
+  9: optional string registration_token,
+  10: i64 id
 }
 
 service IdentityService {
