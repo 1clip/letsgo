@@ -27,7 +27,6 @@ public class ApiVersionHandler extends ChannelInboundHandlerAdapter {
             throw new UnsupportedRequestException("http request only");
         }
         HttpRequest req = (HttpRequest) msg;
-        System.out.println(req.getUri());
         Matcher versionMatcher = versionPattern.matcher(req.getUri());
         if (!versionMatcher.find()) {
             throw new ApiVersionException("api version not specified");

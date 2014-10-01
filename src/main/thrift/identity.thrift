@@ -37,6 +37,6 @@ struct UserInfo {
 }
 
 service IdentityService {
-  i64 create_user(1:NewUser user)
+  UserInfo create_user(1:NewUser user)
   UserInfo get_user(1:i64 user_id)
 }

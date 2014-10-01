@@ -5,6 +5,7 @@ package coffee.letsgo.gateway;
  */
 
 import coffee.letsgo.gateway.handler.ApiVersionHandler;
+import coffee.letsgo.gateway.handler.RouterHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -17,6 +18,7 @@ public class GatewayServerInitializer extends ChannelInitializer<SocketChannel> 
         ch.pipeline()
                 .addLast(new HttpServerCodec())
                 .addLast(new HttpObjectAggregator(65536))
-                .addLast(new ApiVersionHandler());
+                .addLast(new ApiVersionHandler(),
+                        new RouterHandler());
     }
 }

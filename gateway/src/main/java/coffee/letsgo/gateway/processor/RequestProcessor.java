@@ -17,15 +17,15 @@ import static com.google.common.base.Verify.verifyNotNull;
  * Created by xbwu on 9/29/14.
  */
 public abstract class RequestProcessor {
-    private final Gson gson;
+    protected final Gson gson;
 
     public RequestProcessor(Gson gson) {
         this.gson = verifyNotNull(gson);
     }
 
-    public abstract AbstractResponse process(ChannelHandlerContext ctx, HttpRequest req);
+    public abstract String process(ChannelHandlerContext ctx, HttpRequest req) throws Exception;
 
-    protected <T extends AbstractRequest> T decodeRequestBody(HttpRequest req, Class<T> clazz) {
+    protected <T> T decodeRequestBody(HttpRequest req, Class<T> clazz) {
         HttpContent content = (HttpContent) req;
         return gson.fromJson(content.content().toString(Constants.defaultCharset), clazz);
     }

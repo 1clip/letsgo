@@ -43,7 +43,8 @@ public class RouterHandler extends SimpleChannelInboundHandler<HttpRequest> {
         if(processor == null) {
             throw new RequestNotMatchException("unrecognized request");
         }
-        AbstractResponse resp = processor.process(ctx, req);
-
+        String resp = processor.process(ctx, req);
+        ctx.write(resp);
+        ctx.flush();
     }
 }
