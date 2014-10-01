@@ -11,6 +11,10 @@
 
     <artifactId>gateway</artifactId>
 
+    <properties>
+        <thrift.root>${project.parent.basedir}/${thrift.relative_path}</thrift.root>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.netty</groupId>

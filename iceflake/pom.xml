@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <thrift.root>${project.parent.basedir}/src/main/thrift</thrift.root>
+        <thrift.root>${project.parent.basedir}/${thrift.relative_path}</thrift.root>
     </properties>
 
     <modules>
