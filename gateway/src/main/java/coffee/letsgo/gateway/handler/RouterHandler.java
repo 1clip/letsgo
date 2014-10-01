@@ -1,7 +1,6 @@
 package coffee.letsgo.gateway.handler;
 
 import coffee.letsgo.gateway.exception.RequestNotMatchException;
-import coffee.letsgo.gateway.model.AbstractRequest;
 import coffee.letsgo.gateway.model.AbstractResponse;
 import coffee.letsgo.gateway.processor.RequestProcessor;
 import coffee.letsgo.gateway.processor.UserProcessor;

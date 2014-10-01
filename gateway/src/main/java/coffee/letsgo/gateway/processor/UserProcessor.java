@@ -1,6 +1,7 @@
 package coffee.letsgo.gateway.processor;
 
 import coffee.letsgo.gateway.model.AbstractResponse;
+import coffee.letsgo.identity.client.IdentityClient;
 import com.google.gson.Gson;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpRequest;
@@ -15,6 +16,7 @@ public class UserProcessor extends RequestProcessor {
 
     @Override
     public AbstractResponse process(ChannelHandlerContext ctx, HttpRequest req) {
+        IdentityClient client = IdentityClient.getInstance();
         return null;
     }
 }
