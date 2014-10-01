@@ -17,7 +17,7 @@ public class IdentityServiceImpl implements IdentityService {
     private IceflakeClient iceflakeClient = IceflakeClient.getInstance();
 
     @Override
-    public long postUser(User user) throws TException {
+    public long createUser(User user) throws TException {
         long id = iceflakeClient.generateId(IdType.ACCT_ID);
         usersDB.put(id, user);
         return id;

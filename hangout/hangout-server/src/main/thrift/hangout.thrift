@@ -26,7 +26,7 @@ struct Hangout {
 }
 
 service HangoutService {
-    i64 postHangout(1:Hangout hangOut)
+    i64 createHangout(1:Hangout hangOut)
     Hangout getHangoutById(1:i64 hangOutId)
     Hangout getHangoutByIdAndStatus(1:i64 hangOutId, 2:string status)
 }

@@ -14,6 +14,6 @@ struct User {
 }
 
 service IdentityService {
-  i64 postUser(1:User user)
-  User getUser(1:i64 userId)
+  i64 create_user(1:User user)
+  User get_user(1:i64 user_id)
 }
