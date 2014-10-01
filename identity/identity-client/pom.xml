@@ -13,7 +13,7 @@
     <artifactId>identity-client</artifactId>
 
     <properties>
-        <thrift.root>${project.parent.parent.basedir}/src/main/thrift</thrift.root>
+        <thrift.root>${project.parent.parent.basedir}/${thrift.relative_path}</thrift.root>
     </properties>
 
     <dependencies>
