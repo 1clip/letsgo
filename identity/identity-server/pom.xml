@@ -80,7 +80,7 @@
                 </executions>
                 <configuration>
                     <idlFiles>
-                        <directory>${basedir}/src/main/resources/thrift</directory>
+                        <directory>${basedir}/src/main/thrift</directory>
                         <includes>
                             <include>identity.thrift</include>
                         </includes>

@@ -77,7 +77,7 @@
                 </executions>
                 <configuration>
                     <idlFiles>
-                        <directory>${basedir}/../identity-server/src/main/resources/thrift</directory>
+                        <directory>${basedir}/../identity-server/src/main/thrift</directory>
                         <includes>
                             <include>identity.thrift</include>
                         </includes>
