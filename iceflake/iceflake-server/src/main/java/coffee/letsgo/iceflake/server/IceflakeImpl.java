@@ -1,6 +1,7 @@
 package coffee.letsgo.iceflake.server;
 
 import coffee.letsgo.iceflake.Iceflake;
+import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.InvalidIdTypeError;
 import coffee.letsgo.iceflake.InvalidSystemClock;
 import com.google.inject.Inject;
@@ -77,11 +78,11 @@ public class IceflakeImpl implements Iceflake {
     }
 
     @Override
-    public long getId(final long type) throws org.apache.thrift.TException {
-        if (type < 0 || type > maxIdType) {
+    public long getId(final IdType type) throws org.apache.thrift.TException {
+        if (type.getValue() < 0 || type.getValue() > maxIdType) {
             throw new InvalidIdTypeError();
         }
-        return nextId((int) type);
+        return nextId(type.getValue());
     }
 
     private long nextId(int type) {

@@ -1,6 +1,7 @@
 package coffee.letsgo.iceflake.server;
 
 import coffee.letsgo.iceflake.Iceflake;
+import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.config.IceflakeConfigException;
 import coffee.letsgo.iceflake.config.IceflakeWorkerConfig;
 import com.facebook.nifty.client.FramedClientConnector;
@@ -24,7 +25,7 @@ import java.util.concurrent.*;
 public class IdGenTest {
     private IceflakeWorkerConfig config;
     private IceflakeServer server;
-    private int testIdType = 89;
+    private IdType testIdType = IdType.ACCT_ID;
 
     @Test
     public void testIdGeneration() throws ExecutionException, InterruptedException, TException {
@@ -51,24 +52,6 @@ public class IdGenTest {
         Assert.assertEquals(bucket.size(), threads * tries);
         HashSet<Long> hs = new HashSet<>(bucket);
         Assert.assertEquals(hs.size(), threads * tries);
-    }
-
-    @Test
-    public void testInvalidIdType() throws ExecutionException, InterruptedException {
-        Iceflake client = buildClient();
-        try {
-            client.getId(-1);
-            Assert.assertEquals(true, false);
-        } catch (TException e) {
-            Assert.assertEquals(e.getMessage(), "Internal error processing getId");
-        }
-
-        try {
-            client.getId(1 << 7);
-            Assert.assertEquals(true, false);
-        } catch (TException e) {
-            Assert.assertEquals(e.getMessage(), "Internal error processing getId");
-        }
     }
 
     @BeforeTest

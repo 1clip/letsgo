@@ -10,35 +10,29 @@ import org.slf4j.LoggerFactory;
  * Created by xbwu on 9/4/14.
  */
 public class IceflakeClient {
-    private static class IceflakeClientHolder {
-        private static final IceflakeClient Instance = new IceflakeClient();
+    private static class IceflakeProxyHolder {
+        private static final Iceflake Instance = buildServiceProxy();
     }
 
-    private Iceflake clientProxy;
-    private final Logger logger = LoggerFactory.getLogger(IceflakeClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(IceflakeClient.class);
 
-    public static IceflakeClient getInstance()  {
-        if (IceflakeClientHolder.Instance.isCrap()) {
+    public static Iceflake getInstance() {
+        if (IceflakeProxyHolder.Instance == null) {
             throw new IceflakeClientException("crap iceflake client");
         }
-        return IceflakeClientHolder.Instance;
+        return IceflakeProxyHolder.Instance;
     }
 
     private IceflakeClient() {
+    }
+
+    private static Iceflake buildServiceProxy() {
         try {
-            clientProxy = new SwiftClient<Iceflake>("iceflake")
+            return new SwiftClient<Iceflake>("iceflake")
                     .createClient(Iceflake.class).get();
         } catch (Exception ex) {
             logger.error("failed to create client proxy", ex);
-            clientProxy = null;
+            return null;
         }
-    }
-
-    private boolean isCrap() {
-        return clientProxy == null;
-    }
-
-    public long generateId(IdType idType) throws TException {
-        return clientProxy.getId(idType.get_value());
     }
 }
