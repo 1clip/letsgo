@@ -17,6 +17,10 @@
         <module>columbus</module>
         <module>common</module>
         <module>identity</module>
+<<<<<<< HEAD
         <module>hangout</module>
+=======
+        <module>gateway</module>
+>>>>>>> 7a541c35d706387b19fd761cbbd3976f343b1f59
     </modules>
 </project>
