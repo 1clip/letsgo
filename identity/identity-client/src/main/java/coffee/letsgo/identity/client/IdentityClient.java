@@ -2,8 +2,6 @@ package coffee.letsgo.identity.client;
 
 import coffee.letsgo.columbus.client.swift.SwiftClient;
 import coffee.letsgo.identity.IdentityService;
-import coffee.letsgo.identity.User;
-import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,32 +9,28 @@ import org.slf4j.LoggerFactory;
  * Created by yfang on 9/4/14.
  */
 public class IdentityClient {
-    private static class IdentityClientHolder {
-        private static final IdentityClient Instance = new IdentityClient();
+    private static class IdentityProxyHolder {
+        private static final IdentityService Instance = buildIdentityProxy();
     }
 
-    private IdentityService clientProxy;
-    private final Logger logger = LoggerFactory.getLogger(IdentityClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(IdentityClient.class);
 
-    public static IdentityClient getInstance()  {
-        return IdentityClientHolder.Instance;
+    public static IdentityService getInstance() {
+        if(IdentityProxyHolder.Instance == null) {
+            throw new IdentityClientException("crap identity client");
+        }
+        return IdentityProxyHolder.Instance;
     }
 
-    private IdentityClient() {
+    private IdentityClient() { }
+
+    private static IdentityService buildIdentityProxy() {
         try {
-            clientProxy = new SwiftClient<IdentityService>("identity")
+            return new SwiftClient<IdentityService>("identity")
                     .createClient(IdentityService.class).get();
         } catch (Exception ex) {
             logger.error("failed to create client proxy", ex);
-            clientProxy = null;
+            return null;
         }
-    }
-
-    public User getUser(long userId) throws TException {
-        return clientProxy.getUser(userId);
-    }
-
-    public long createUser(User userInfo) throws TException {
-        return clientProxy.createUser(userInfo);
     }
 }
