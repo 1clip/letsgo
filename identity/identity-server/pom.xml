@@ -86,6 +86,7 @@
                     <idlFiles>
                         <directory>${thrift.root}</directory>
                         <includes>
+                            <include>iceflake.thrift</include>
                             <include>identity.thrift</include>
                         </includes>
                     </idlFiles>
