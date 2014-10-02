@@ -1,7 +1,7 @@
 package coffee.letsgo.identity.server;
 
 import coffee.letsgo.columbus.server.swift.SwiftServer;
-import coffee.letsgo.identity.IdentityService;
+import com.facebook.swift.service.guice.ThriftServiceExporter;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
@@ -24,7 +24,7 @@ public class IdentityServer {
             @Override
             public void configure(Binder binder) {
                 binder.bind(IdentityServiceImpl.class).in(Scopes.SINGLETON);
-                binder.bind(IdentityService.class).to(IdentityServiceImpl.class);
+                ThriftServiceExporter.thriftServerBinder(binder).exportThriftService(IdentityServiceImpl.class);
             }
         });
         server.start();

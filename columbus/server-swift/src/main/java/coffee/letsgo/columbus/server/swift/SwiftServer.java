@@ -34,7 +34,8 @@ public class SwiftServer extends ColumbusServer {
                         ))),
                 new ThriftCodecModule(),
                 new ThriftServerModule(),
-                serviceModule).getInstance(ThriftServer.class).start();
+                serviceModule).getInstance(ThriftServer.class);
+        server.start();
     }
 
     @Override

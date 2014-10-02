@@ -6,7 +6,9 @@ import coffee.letsgo.iceflake.client.IceflakeClient;
 import coffee.letsgo.identity.IdentityService;
 import coffee.letsgo.identity.NewUser;
 import coffee.letsgo.identity.UserInfo;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.thrift.TException;
 
@@ -15,15 +17,19 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by yfang on 9/25/14.
  */
-@Singleton
 public class IdentityServiceImpl implements IdentityService {
-    private ConcurrentHashMap<Long, UserInfo> usersDB = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, UserInfo> usersDB = new ConcurrentHashMap<>();
 
-    private Iceflake iceflakeClient = IceflakeClient.getInstance();
+    private static class IceflakeClientHolder {
+        private static Iceflake Instance = IceflakeClient.getInstance();
+    }
+
+    @Inject
+    public IdentityServiceImpl() { }
 
     @Override
     public UserInfo createUser(NewUser newUser) throws TException {
-        long id = iceflakeClient.getId(IdType.ACCT_ID);
+        long id = IceflakeClientHolder.Instance.getId(IdType.ACCT_ID);
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(id);
         try {
