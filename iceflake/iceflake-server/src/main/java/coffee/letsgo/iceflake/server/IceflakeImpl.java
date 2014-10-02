@@ -5,11 +5,13 @@ import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.InvalidIdTypeError;
 import coffee.letsgo.iceflake.InvalidSystemClock;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 /**
  * Created by xbwu on 8/29/14.
  */
+@Singleton
 public class IceflakeImpl implements Iceflake {
 
     private long workerId;
