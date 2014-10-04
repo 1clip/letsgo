@@ -1,28 +1,26 @@
 package coffee.letsgo.columbus.client.loadbalancer;
 
 import coffee.letsgo.columbus.service.AvailabilitySet;
-import com.google.common.base.Function;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 /**
  * Created by xbwu on 9/23/14.
  */
-public class RoundrobinBalancer<C> extends LoadBalancer<C> {
+public class RoundrobinBalancer extends LoadBalancer {
     private int idx = 0;
 
     @Inject
-    public RoundrobinBalancer(AvailabilitySet availabilitySet,
-                              Function<String, ListenableFuture> tunnelCreator) {
-        super(availabilitySet, tunnelCreator);
+    public RoundrobinBalancer(AvailabilitySet availabilitySet) {
+        super(availabilitySet);
     }
 
     @Override
-    protected String nextUri() {
-        int sz = activeList.size();
+    protected String nextUri(ImmutableList<String> candidates) {
+        int sz = candidates.size();
         synchronized (this) {
             idx = ++idx % sz;
-            return activeList.get(idx);
+            return candidates.get(idx);
         }
     }
 }

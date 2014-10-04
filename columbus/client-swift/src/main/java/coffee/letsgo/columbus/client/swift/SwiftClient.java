@@ -25,11 +25,12 @@ public class SwiftClient<C> {
 
     public ListenableFuture<C> createClient(final Class<C> cliClazz,
                                             final Class<? extends LoadBalancer> lbClazz) {
-        return new ClumbusClient(serviceName).createClient(cliClazz,
+        return new ClumbusClient(serviceName).createClient(
+                cliClazz,
                 lbClazz,
-                new Function<String, ListenableFuture>() {
+                new Function<String, ListenableFuture<C>>() {
                     @Override
-                    public ListenableFuture apply(String uri) {
+                    public ListenableFuture<C> apply(String uri) {
                         return new ThriftClientManager().createClient(
                                 new FramedClientConnector(HostAndPort.fromString(uri)),
                                 cliClazz);

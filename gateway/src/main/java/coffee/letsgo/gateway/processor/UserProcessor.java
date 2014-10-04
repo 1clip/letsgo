@@ -1,8 +1,9 @@
 package coffee.letsgo.gateway.processor;
 
 import coffee.letsgo.gateway.exception.GatewayException;
-import coffee.letsgo.gateway.model.AbstractResponse;
-import coffee.letsgo.identity.*;
+import coffee.letsgo.identity.IdentityService;
+import coffee.letsgo.identity.NewUser;
+import coffee.letsgo.identity.UserInfo;
 import coffee.letsgo.identity.client.IdentityClient;
 import com.google.gson.Gson;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
  */
 public class UserProcessor extends RequestProcessor {
     private final Pattern userIdPattern = Pattern.compile("^/users/(\\d+)$");
-    private static final IdentityService identityClient = IdentityClient.getInstance();
+    private final IdentityService identityClient = IdentityClient.getInstance();
 
     public UserProcessor(Gson gson) {
         super(gson);
@@ -26,15 +27,6 @@ public class UserProcessor extends RequestProcessor {
 
     @Override
     public String process(ChannelHandlerContext ctx, HttpRequest req) throws Exception {
-        NewUser nu = new NewUser();
-        nu.setLoginName("login_name");
-        nu.setFriendlyName("friendly_name");
-        nu.setGender(Gender.MALE);
-        nu.setCellPhone("415.238.7173");
-        nu.setDateOfBirth("1999-01-01");
-        nu.setSignUpType(SignupType.CELL_PHONE);
-        nu.setSignUpToken("token");
-        System.out.println(gson.toJson(nu));
         if (req.getMethod() == HttpMethod.GET) {
             Matcher matcher = userIdPattern.matcher(req.getUri());
             if (matcher.matches()) {
@@ -55,6 +47,7 @@ public class UserProcessor extends RequestProcessor {
     }
 
     private UserInfo createUser(NewUser newUser) throws TException {
+
         return identityClient.createUser(newUser);
     }
 }

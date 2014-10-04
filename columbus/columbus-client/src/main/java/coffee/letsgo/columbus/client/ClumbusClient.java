@@ -1,5 +1,6 @@
 package coffee.letsgo.columbus.client;
 
+import coffee.letsgo.columbus.client.exception.ClumbusClientException;
 import coffee.letsgo.columbus.client.loadbalancer.LoadBalancer;
 import coffee.letsgo.columbus.client.loadbalancer.LoadBalancerFactory;
 import coffee.letsgo.columbus.client.loadbalancer.RandomBalancer;
@@ -30,7 +31,6 @@ import static com.google.common.base.Verify.verifyNotNull;
  */
 public class ClumbusClient {
     protected String serviceName;
-    private boolean startedSwitch = false;
     private final ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
     private final ServiceDeamon serviceDeamon;
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -42,19 +42,32 @@ public class ClumbusClient {
     }
 
     public <C> ListenableFuture<C> createClient(final Class<C> cliClazz,
-                                                final Function<String, ListenableFuture> tunnelCreator) {
-        return createClient(cliClazz, RandomBalancer.class, tunnelCreator);
+                                                final Function<String, ListenableFuture<C>> tunnelCreator) {
+        return createClient(cliClazz, tunnelCreator, 2);
+    }
+
+    public <C> ListenableFuture<C> createClient(final Class<C> cliClazz,
+                                                final Function<String, ListenableFuture<C>> tunnelCreator,
+                                                final int retries) {
+        return createClient(cliClazz, RandomBalancer.class, tunnelCreator, retries);
     }
 
     public <C> ListenableFuture<C> createClient(final Class<C> cliClazz,
                                                 final Class<? extends LoadBalancer> lbClazz,
-                                                final Function<String, ListenableFuture> tunnelCreator) {
+                                                final Function<String, ListenableFuture<C>> tunnelCreator) {
+        return createClient(cliClazz, lbClazz, tunnelCreator, 2);
+    }
+
+    public <C> ListenableFuture<C> createClient(final Class<C> cliClazz,
+                                                final Class<? extends LoadBalancer> lbClazz,
+                                                final Function<String, ListenableFuture<C>> tunnelCreator,
+                                                final int retries) {
         return service.submit(new Callable<C>() {
             public C call() {
                 serviceDeamon.awaitInitialized(5 * 60 * 1000);
-                LoadBalancer<C> lb = new LoadBalancerFactory<C>()
-                        .getLoadbalancer(lbClazz, serviceDeamon.getAvailabilitySet(), tunnelCreator);
-                return createClientProxy(lb, cliClazz);
+                LoadBalancer lb = new LoadBalancerFactory()
+                        .getLoadbalancer(lbClazz, serviceDeamon.getAvailabilitySet());
+                return createClientProxy(lb, cliClazz, tunnelCreator, retries);
             }
         });
     }
@@ -72,13 +85,24 @@ public class ClumbusClient {
     }
 
     private <C> C createClientProxy(final LoadBalancer lb,
-                                    final Class<C> type) {
+                                    final Class<C> type,
+                                    final Function<String, ListenableFuture<C>> tunnelCreator,
+                                    final int retries) {
         return type.cast(Proxy.newProxyInstance(type.getClassLoader(),
                 new Class[]{type},
                 new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        return method.invoke(lb.next(), args);
+                        int attempts = 0;
+                        while (++attempts <= retries) {
+                            try {
+                                String uri = lb.next();
+                                return method.invoke(tunnelCreator.apply(uri).get(), args);
+                            } catch (Exception ex) {
+                                logger.error(String.format("client invocation failed %d/%d", attempts, retries), ex);
+                            }
+                        }
+                        throw new ClumbusClientException("failed to process client invocation in all attempts");
                     }
                 }));
     }

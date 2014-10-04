@@ -8,7 +8,6 @@ import coffee.letsgo.identity.NewUser;
 import coffee.letsgo.identity.UserInfo;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.thrift.TException;
 
@@ -17,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by yfang on 9/25/14.
  */
+@Singleton
 public class IdentityServiceImpl implements IdentityService {
     private final ConcurrentHashMap<Long, UserInfo> usersDB = new ConcurrentHashMap<>();
 

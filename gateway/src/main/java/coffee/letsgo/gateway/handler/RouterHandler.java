@@ -5,14 +5,19 @@ import coffee.letsgo.gateway.model.AbstractResponse;
 import coffee.letsgo.gateway.processor.RequestProcessor;
 import coffee.letsgo.gateway.processor.UserProcessor;
 import coffee.letsgo.gateway.util.RequestMatcher;
+import com.google.common.base.Charsets;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.*;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,8 +48,18 @@ public class RouterHandler extends SimpleChannelInboundHandler<HttpRequest> {
         if(processor == null) {
             throw new RequestNotMatchException("unrecognized request");
         }
-        String resp = processor.process(ctx, req);
-        ctx.write(resp);
+
+        String msg = processor.process(ctx, req);
+        FullHttpResponse response = new DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1,
+                HttpResponseStatus.OK,
+                Unpooled.wrappedBuffer(msg.getBytes(Charset.forName("UTF-8"))));
+        response.headers().set("Content-Type", "application/json");
+        ctx.write(response).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         ctx.flush();
     }
 }
