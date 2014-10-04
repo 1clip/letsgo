@@ -5,7 +5,6 @@ import coffee.letsgo.identity.IdentityService;
 import coffee.letsgo.identity.NewUser;
 import coffee.letsgo.identity.UserInfo;
 import coffee.letsgo.identity.client.IdentityClient;
-import com.google.gson.Gson;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
@@ -20,10 +19,6 @@ import java.util.regex.Pattern;
 public class UserProcessor extends RequestProcessor {
     private final Pattern userIdPattern = Pattern.compile("^/users/(\\d+)$");
     private final IdentityService identityClient = IdentityClient.getInstance();
-
-    public UserProcessor(Gson gson) {
-        super(gson);
-    }
 
     @Override
     public String process(ChannelHandlerContext ctx, HttpRequest req) throws Exception {

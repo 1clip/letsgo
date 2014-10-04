@@ -3,7 +3,7 @@ package coffee.letsgo.gateway.exception;
 /**
  * Created by xbwu on 9/29/14.
  */
-public class ApiVersionException extends GatewayException {
+public class ApiVersionException extends BadRequestException {
     public ApiVersionException(String msg) {
         super(msg);
     }
