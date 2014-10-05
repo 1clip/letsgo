@@ -83,6 +83,7 @@
                     <idlFiles>
                         <directory>${thrift.root}</directory>
                         <includes>
+                            <include>avatar.thrift</include>
                             <include>identity.thrift</include>
                         </includes>
                     </idlFiles>

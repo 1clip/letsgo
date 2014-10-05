@@ -1,9 +1,6 @@
 namespace java.swift coffee.letsgo.identity
 
-struct AvatarInfo {
-  1: i64 avatar_id,
-  2: i64 avatar_token
-}
+include "avatar.thrift"
 
 enum Gender {
   MALE = 0,
@@ -20,7 +17,7 @@ struct NewUser {
   2: string friendly_name,
   3: Gender gender,
   4: string date_of_birth,
-  5: optional AvatarInfo avatar
+  5: optional avatar.AvatarInfo avatar
   6: string cell_phone,
   7: SignupType sign_up_type,
   8: string sign_up_token,
@@ -32,7 +29,7 @@ struct UserInfo {
   3: string friendly_name,
   4: Gender gender,
   5: string date_of_birth,
-  6: optional AvatarInfo avatar,
+  6: optional avatar.AvatarInfo avatar,
   7: string cell_phone
 }
 
