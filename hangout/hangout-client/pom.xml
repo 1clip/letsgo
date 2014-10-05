@@ -9,27 +9,16 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <artifactId>hangout-client</artifactId>
+
     <properties>
         <thrift.root>${project.parent.parent.basedir}/${thrift.relative_path}</thrift.root>
     </properties>
 
-    <groupId>coffee.letsgo</groupId>
-    <artifactId>hangout-server</artifactId>
-
     <dependencies>
         <dependency>
-            <groupId>coffee.letsgo.iceflake</groupId>
-            <artifactId>iceflake-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>coffee.letsgo</groupId>
-            <artifactId>identity-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
-            <artifactId>server-swift</artifactId>
+            <artifactId>client-swift</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -51,6 +40,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.7</version>
+        </dependency>
+        <dependency>
+            <groupId>coffee.letsgo.iceflake</groupId>
+            <artifactId>iceflake-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -87,8 +82,7 @@
                     <idlFiles>
                         <directory>${thrift.root}</directory>
                         <includes>
-                            <include>iceflake.thrift</include>
-                            <include>identity.thrift</include>
+                            <include>avatar.thrift</include>
                             <include>hangout.thrift</include>
                         </includes>
                     </idlFiles>
@@ -96,5 +90,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

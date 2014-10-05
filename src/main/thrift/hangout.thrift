@@ -1,4 +1,4 @@
-namespace java.swift coffee.letsgo.identity
+namespace java.swift coffee.letsgo.hangout
 
 include "avatar.thrift"
 

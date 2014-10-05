@@ -13,11 +13,12 @@
         <thrift.root>${project.parent.basedir}/${thrift.relative_path}</thrift.root>
     </properties>
 
-    <groupId>coffee.letsgo</groupId>
+    <groupId>coffee.letsgo.hangout</groupId>
     <artifactId>hangout</artifactId>
     <packaging>pom</packaging>
     <modules>
         <module>hangout-server</module>
+        <module>hangout-client</module>
     </modules>
 
 
