@@ -28,7 +28,7 @@ public class RequestMatcher {
             patterns.add(Pattern.compile("^" + prefix));
         } else {
             patterns.add(Pattern.compile("^" + prefix + "$"));
-            patterns.add(Pattern.compile("^" + prefix + "/"));
+            patterns.add(Pattern.compile("^" + prefix + "/.*$"));
         }
         this.methods = methods;
     }

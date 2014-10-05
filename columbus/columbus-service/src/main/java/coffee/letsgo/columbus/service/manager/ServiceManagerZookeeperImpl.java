@@ -242,13 +242,7 @@ public class ServiceManagerZookeeperImpl implements ServiceManager {
     @Override
     public void start() {
         logger.debug("starting service manager");
-        try {
-            zk = new ZooKeeper(connectionString, sessionTimeout, eventWatcher);
-        } catch (Exception e) {
-            throw new ServiceManagerRuntimeException(
-                    String.format("failed to connect to zk server [%s]", connectionString),
-                    e);
-        }
+        startZookeeper();
         logger.info("service manager started");
     }
 
@@ -279,6 +273,16 @@ public class ServiceManagerZookeeperImpl implements ServiceManager {
                 zkNodeMembers,
                 zkNodeActives}) {
             verifyZkPathExists(node);
+        }
+    }
+
+    private void startZookeeper() {
+        try {
+            zk = new ZooKeeper(connectionString, sessionTimeout, eventWatcher);
+        } catch (Exception e) {
+            throw new ServiceManagerRuntimeException(
+                    String.format("failed to connect to zk server [%s]", connectionString),
+                    e);
         }
     }
 
@@ -369,6 +373,7 @@ public class ServiceManagerZookeeperImpl implements ServiceManager {
                     logger.warn("zk connection expired");
                     zkConnected.set(false);
                     notifyEvent(ServiceEvent.EXPIRED);
+                    startZookeeper();
                     break;
                 default:
                     break;

@@ -25,7 +25,7 @@ public class UserProcessor extends RequestProcessor {
         if (req.getMethod() == HttpMethod.GET) {
             Matcher matcher = userIdPattern.matcher(req.getUri());
             if (matcher.matches()) {
-                long id = Long.parseLong(matcher.group(2));
+                long id = Long.parseLong(matcher.group(1));
                 return gson.toJson(getUser(id));
             }
             throw new GatewayException("failed to process");
