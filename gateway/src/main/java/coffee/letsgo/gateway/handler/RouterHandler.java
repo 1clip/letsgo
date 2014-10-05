@@ -1,6 +1,7 @@
 package coffee.letsgo.gateway.handler;
 
 import coffee.letsgo.gateway.exception.RequestNotMatchException;
+import coffee.letsgo.gateway.processor.HangoutProcessor;
 import coffee.letsgo.gateway.processor.RequestProcessor;
 import coffee.letsgo.gateway.processor.UserProcessor;
 import coffee.letsgo.gateway.util.RequestMatcher;
@@ -21,6 +22,7 @@ public class RouterHandler extends GatewayInboundHandler {
 
     public RouterHandler() {
         routingTable.put(new RequestMatcher("/users"), new UserProcessor());
+        routingTable.put(new RequestMatcher("/hangouts"), new HangoutProcessor());
     }
 
     @Override
