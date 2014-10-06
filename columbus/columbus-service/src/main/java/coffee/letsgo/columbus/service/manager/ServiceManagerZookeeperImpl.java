@@ -42,7 +42,7 @@ public class ServiceManagerZookeeperImpl implements ServiceManager {
     private final String zkConnectStrKey = "columbus.service.zk.ConnectString";
     private final String zkConnectTimeout = "columbus.service.zk.ConnectTimeout";
     private final String zkConnectStrDefaultVal = "localhost:2181";
-    private final String zkConnectTimeoutDefaultVal = "300000";
+    private final String zkConnectTimeoutDefaultVal = "1800000";
 
     private ZooKeeper zk = null;
 

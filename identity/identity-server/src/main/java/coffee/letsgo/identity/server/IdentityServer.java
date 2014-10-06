@@ -10,8 +10,8 @@ import com.google.inject.Scopes;
  * Created by xbwu on 10/1/14.
  */
 public class IdentityServer {
-    private static final String serviceName = "identity";
-    private static final int defaultServerPort = 7166;
+    public static final String serviceName = "identity";
+    public static final int defaultServerPort = 7166;
     private final int serverPort;
     private SwiftServer server;
 

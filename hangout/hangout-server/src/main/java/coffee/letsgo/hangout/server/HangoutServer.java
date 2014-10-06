@@ -12,8 +12,8 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class HangoutServer {
-    private static final String serviceName = "hangout";
-    private static final int defaultServerPort = 7167;
+    public static final String serviceName = "hangout";
+    public static final int defaultServerPort = 7167;
     private final int serverPort;
     private SwiftServer server;
 

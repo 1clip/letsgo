@@ -21,5 +21,6 @@
         <module>identity</module>
         <module>hangout</module>
         <module>gateway</module>
+        <module>service-starter</module>
     </modules>
 </project>

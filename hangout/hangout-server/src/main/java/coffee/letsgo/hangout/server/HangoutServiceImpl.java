@@ -1,5 +1,6 @@
 package coffee.letsgo.hangout.server;
 
+import coffee.letsgo.hangout.*;
 import coffee.letsgo.iceflake.Iceflake;
 import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;

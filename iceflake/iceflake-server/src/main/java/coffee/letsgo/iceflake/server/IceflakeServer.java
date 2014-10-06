@@ -28,7 +28,7 @@ public class IceflakeServer {
         this.serverPort = serverPort;
     }
 
-    public void start() throws UnknownHostException, IceflakeConfigException {
+    public void start() {
         server = new SwiftServer(IceflakeConfigManager.getInstance().getServiceName(), serverPort, new Module() {
             @Override
             public void configure(Binder binder) {
