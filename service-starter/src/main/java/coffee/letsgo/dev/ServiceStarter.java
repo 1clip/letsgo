@@ -65,7 +65,7 @@ public class ServiceStarter {
 
     private static void startIdentityServer() {
         log("starting identity server");
-        identityServer = new IdentityServer(IdentityServer.defaultServerPort);
+        identityServer = new IdentityServer();
         identityServer.start();
         log("identity server started");
     }
@@ -84,7 +84,7 @@ public class ServiceStarter {
 
     private static void startHangoutServer() {
         log("starting hangout server");
-        hangoutServer = new HangoutServer(HangoutServer.defaultServerPort);
+        hangoutServer = new HangoutServer();
         hangoutServer.start();
         log("hangout server started");
     }

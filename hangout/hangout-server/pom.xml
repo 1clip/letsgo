@@ -58,6 +58,24 @@
             <version>6.8.8</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>coffee.letsgo</groupId>
+            <artifactId>identity-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>coffee.letsgo.iceflake</groupId>
+            <artifactId>iceflake-server</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>coffee.letsgo.hangout</groupId>
+            <artifactId>hangout-client</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

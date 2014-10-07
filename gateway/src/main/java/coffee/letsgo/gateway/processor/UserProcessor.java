@@ -2,8 +2,7 @@ package coffee.letsgo.gateway.processor;
 
 import coffee.letsgo.gateway.exception.GatewayException;
 import coffee.letsgo.identity.IdentityService;
-import coffee.letsgo.identity.NewUser;
-import coffee.letsgo.identity.UserInfo;
+import coffee.letsgo.identity.User;
 import coffee.letsgo.identity.client.IdentityClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
@@ -30,18 +29,18 @@ public class UserProcessor extends RequestProcessor {
             }
             throw new GatewayException("failed to process");
         } else if (req.getMethod() == HttpMethod.POST) {
-            NewUser newUser = decodeRequestBody(req, NewUser.class);
+            User newUser = decodeRequestBody(req, User.class);
             return gson.toJson(createUser(newUser));
         } else {
             throw new GatewayException("failed to process");
         }
     }
 
-    private UserInfo getUser(long userId) throws TException {
+    private User getUser(long userId) throws TException {
         return identityClient.getUser(userId);
     }
 
-    private UserInfo createUser(NewUser newUser) throws TException {
+    private User createUser(User newUser) throws TException {
 
         return identityClient.createUser(newUser);
     }
