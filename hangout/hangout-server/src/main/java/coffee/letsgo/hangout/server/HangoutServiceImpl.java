@@ -18,8 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by yfang on 10/4/14.
  */
 public class HangoutServiceImpl implements HangoutService {
-    private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, UserHangoutInfo>> userHangOuts = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, HangoutInfo> hangOuts = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, UserHangoutInfo>> userHangOutsDB = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, HangoutInfo> hangOutsDB = new ConcurrentHashMap<>();
 
     private static class IceflakeClientHolder {
         private static Iceflake Instance = IceflakeClient.getInstance();
@@ -31,46 +31,46 @@ public class HangoutServiceImpl implements HangoutService {
 
     @Override
     public Hangout createHangout(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "hangOut", requiredness = ThriftField.Requiredness.NONE) Hangout hangOut) throws TException {
-        UserInfo userInfo = IdentityClientHolder.instance.getUser(userId);
+        User userInfo = IdentityClientHolder.instance.getUser(userId);
         if (userInfo == null) {
             return null;
         }
         long hangOutId = IceflakeClientHolder.Instance.getId(IdType.HANGOUT_ID);
         hangOut.setId(hangOutId);
+
         Participator organizer = new Participator();
         organizer.setId(userId);
         organizer.setRole(Role.ORGANIZER);
         organizer.setState(ParticipatorState.ACCEPT);
-        if (hangOut.getParticipators() == null) {
-            hangOut.setParticipators(new ArrayList<Participator>());
+
+        HangoutInfo hangoutInfo = toHangoutInfo(hangOut, organizer);
+        if (hangoutInfo == null) {
+            return null;
         }
-        hangOut.getParticipators().add(organizer);
+        hangoutInfo.setOrganizerId(organizer.getId());
+        hangOutsDB.put(hangOutId, hangoutInfo);
 
-        HangoutInfo hangoutInfo = toHangoutInfo(hangOut);
-        hangoutInfo.setOrganizerId(userId);
-        hangOuts.put(hangOutId, hangoutInfo);
-
-        List<UserHangoutInfo> userHangoutInfos = toUserHangoutInfos(hangOut);
+        List<UserHangoutInfo> userHangoutInfos = toUserHangoutInfos(hangOut, organizer);
         for (UserHangoutInfo uh : userHangoutInfos) {
-            ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOuts.get(uh.getUserId());
+            ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOutsDB.get(uh.getUserId());
             if (uhs == null) {
                 uhs = new ConcurrentHashMap<>();
             }
             uhs.put(hangOutId, uh);
-            userHangOuts.put(uh.getUserId(), uhs);
+            userHangOutsDB.put(uh.getUserId(), uhs);
         }
         return hangOut;
     }
 
     @Override
     public Hangout getHangoutById(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId) throws TException {
-        UserInfo userInfo = IdentityClientHolder.instance.getUser(userId);
+        User userInfo = IdentityClientHolder.instance.getUser(userId);
         if (userInfo == null) {
             return null;
         }
-        ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOuts.get(userId);
+        ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOutsDB.get(userId);
         if (uhs != null && uhs.get(hangOutId) != null) {
-            HangoutInfo hangoutInfo = hangOuts.get(hangOutId);
+            HangoutInfo hangoutInfo = hangOutsDB.get(hangOutId);
             List<Long> participators = hangoutInfo.getParticipators();
             if (participators == null || !participators.contains(userId)) {
                 return null;
@@ -86,14 +86,14 @@ public class HangoutServiceImpl implements HangoutService {
             hangout.setParticipators(new ArrayList<Participator>());
 
             for (Long pId : participators) {
-                UserInfo p = IdentityClientHolder.instance.getUser(pId);
+                User p = IdentityClientHolder.instance.getUser(pId);
                 if (p == null) {
                     return null;
                 }
-                if (userHangOuts.get(pId) == null || userHangOuts.get(pId).get(hangOutId) == null) {
+                if (userHangOutsDB.get(pId) == null || userHangOutsDB.get(pId).get(hangOutId) == null) {
                     return null;
                 }
-                UserHangoutInfo userHangoutInfo = userHangOuts.get(pId).get(hangOutId);
+                UserHangoutInfo userHangoutInfo = userHangOutsDB.get(pId).get(hangOutId);
                 Participator participator = new Participator();
                 participator.setId(pId);
                 participator.setState(userHangoutInfo.getState());
@@ -111,7 +111,7 @@ public class HangoutServiceImpl implements HangoutService {
 
     @Override
     public List<HangoutSummary> getHangoutByStatus(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "status", requiredness = ThriftField.Requiredness.NONE) String status) throws TException {
-        UserInfo userInfo = IdentityClientHolder.instance.getUser(userId);
+        User userInfo = IdentityClientHolder.instance.getUser(userId);
         if (userInfo == null) {
             return null;
         }
@@ -122,12 +122,12 @@ public class HangoutServiceImpl implements HangoutService {
             return null;
         }
 
-        ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOuts.get(userId);
+        ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOutsDB.get(userId);
         List<HangoutSummary> hangoutSummaries = new ArrayList<>();
         if (uhs != null) {
             for (Map.Entry<Long, UserHangoutInfo> kvp : uhs.entrySet()) {
                 Long hangOutId = kvp.getKey();
-                HangoutInfo hangOutInfo = hangOuts.get(hangOutId);
+                HangoutInfo hangOutInfo = hangOutsDB.get(hangOutId);
                 if (hangOutInfo == null) {
                     return null;
                 }
@@ -165,13 +165,13 @@ public class HangoutServiceImpl implements HangoutService {
         if (participators == null || participators.size() < 1) {
             return;
         }
-        UserInfo userInfo = IdentityClientHolder.instance.getUser(userId);
+        User userInfo = IdentityClientHolder.instance.getUser(userId);
         if (userInfo == null) {
             return;
         }
 
-        UserHangoutInfo userHangoutInfo = userHangOuts.get(userId) == null ? null : userHangOuts.get(userId).get(hangOutId);
-        HangoutInfo hangOutInfo = hangOuts.get(hangOutId);
+        UserHangoutInfo userHangoutInfo = userHangOutsDB.get(userId) == null ? null : userHangOutsDB.get(userId).get(hangOutId);
+        HangoutInfo hangOutInfo = hangOutsDB.get(hangOutId);
         if (userHangoutInfo == null || hangOutInfo == null) {
             return;
         }
@@ -179,7 +179,7 @@ public class HangoutServiceImpl implements HangoutService {
         ParticipatorState originState = userHangoutInfo.getState();
         userHangoutInfo.setComment(p.getComment());
         userHangoutInfo.setState(p.getState());
-        userHangOuts.get(userId).put(hangOutId, userHangoutInfo);
+        userHangOutsDB.get(userId).put(hangOutId, userHangoutInfo);
 
         int accepted = hangOutInfo.getNumAccepted();
         int pending = hangOutInfo.getNumPending();
@@ -214,10 +214,13 @@ public class HangoutServiceImpl implements HangoutService {
         hangOutInfo.setNumPending(pending);
         hangOutInfo.setNumDeclined(reject);
 
-        hangOuts.put(hangOutId, hangOutInfo);
+        hangOutsDB.put(hangOutId, hangOutInfo);
     }
 
-    private HangoutInfo toHangoutInfo(Hangout hangOut) {
+    private HangoutInfo toHangoutInfo(Hangout hangOut, Participator organizer) {
+        if (hangOut == null || organizer == null) {
+            return null;
+        }
         HangoutInfo hangoutInfo = new HangoutInfo();
         hangoutInfo.setStartTime(hangOut.getStartTime());
         hangoutInfo.setEndTime(hangOut.getEndTime());
@@ -229,27 +232,36 @@ public class HangoutServiceImpl implements HangoutService {
 
         if (hangOut.getParticipators() != null) {
             for (Participator p : hangOut.getParticipators()) {
+                if (p.getId() == organizer.getId()) {
+                    return null;
+                }
                 hangoutInfo.getParticipators().add(p.getId());
             }
         }
+        hangoutInfo.getParticipators().add(organizer.getId());
         hangoutInfo.setNumAccepted(0);
         hangoutInfo.setNumPending(hangoutInfo.getParticipators().size() - 1);
         return hangoutInfo;
     }
 
-    private List<UserHangoutInfo> toUserHangoutInfos(Hangout hangout) {
+    private List<UserHangoutInfo> toUserHangoutInfos(Hangout hangout, Participator organizer) {
+        if (hangout == null || organizer == null) {
+            return null;
+        }
+        List<Participator> participators = new ArrayList<>();
+        participators.add(organizer);
+        participators.addAll(hangout.getParticipators());
+
         List<UserHangoutInfo> userHangoutInfos = new ArrayList<>();
-        if (hangout.getParticipators() != null && hangout.getParticipators().size() > 1) {
-            for (Participator p : hangout.getParticipators()) {
-                if (p != null) {
-                    UserHangoutInfo userHangoutInfo = new UserHangoutInfo();
-                    userHangoutInfo.setHangoutId(hangout.getId());
-                    userHangoutInfo.setState(p.getState() == null ? ParticipatorState.PENDING : p.getState());
-                    userHangoutInfo.setComment(p.getComment());
-                    userHangoutInfo.setRole(p.getRole() == null ? Role.INVITEE : p.getRole());
-                    userHangoutInfo.setUserId(p.getId());
-                    userHangoutInfos.add(userHangoutInfo);
-                }
+        for (Participator p : participators) {
+            if (p != null) {
+                UserHangoutInfo userHangoutInfo = new UserHangoutInfo();
+                userHangoutInfo.setHangoutId(hangout.getId());
+                userHangoutInfo.setState(p.getState() == null ? ParticipatorState.PENDING : p.getState());
+                userHangoutInfo.setComment(p.getComment());
+                userHangoutInfo.setRole(p.getRole() == null ? Role.INVITEE : p.getRole());
+                userHangoutInfo.setUserId(p.getId());
+                userHangoutInfos.add(userHangoutInfo);
             }
         }
         return userHangoutInfos;

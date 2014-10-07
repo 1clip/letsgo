@@ -12,15 +12,10 @@ import com.google.inject.Scopes;
 public class IdentityServer {
     public static final String serviceName = "identity";
     public static final int defaultServerPort = 7166;
-    private final int serverPort;
     private SwiftServer server;
 
-    public IdentityServer(int serverPort) {
-        this.serverPort = serverPort;
-    }
-
     public void start() {
-        server = new SwiftServer(serviceName, serverPort, new Module() {
+        server = new SwiftServer(serviceName, defaultServerPort, new Module() {
             @Override
             public void configure(Binder binder) {
                 binder.bind(IdentityServiceImpl.class).in(Scopes.SINGLETON);
@@ -38,6 +33,6 @@ public class IdentityServer {
     }
 
     public static void main(String[] args) {
-        new IdentityServer(defaultServerPort).start();
+        new IdentityServer().start();
     }
 }

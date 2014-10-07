@@ -4,8 +4,7 @@ import coffee.letsgo.iceflake.Iceflake;
 import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;
 import coffee.letsgo.identity.IdentityService;
-import coffee.letsgo.identity.NewUser;
-import coffee.letsgo.identity.UserInfo;
+import coffee.letsgo.identity.User;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.beanutils.BeanUtils;
@@ -18,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Singleton
 public class IdentityServiceImpl implements IdentityService {
-    private final ConcurrentHashMap<Long, UserInfo> usersDB = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, User> usersDB = new ConcurrentHashMap<>();
 
     private static class IceflakeClientHolder {
         private static Iceflake Instance = IceflakeClient.getInstance();
@@ -28,21 +27,21 @@ public class IdentityServiceImpl implements IdentityService {
     public IdentityServiceImpl() { }
 
     @Override
-    public UserInfo createUser(NewUser newUser) throws TException {
-        long id = IceflakeClientHolder.Instance.getId(IdType.ACCT_ID);
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUserId(id);
+    public User createUser(User newUser) throws TException {
+        User user = new User();
         try {
-            BeanUtils.copyProperties(userInfo, newUser);
+            BeanUtils.copyProperties(user, newUser);
         } catch (Exception ex) {
            throw new TException("failed to clone user");
         }
-        usersDB.put(id, userInfo);
+        long id = IceflakeClientHolder.Instance.getId(IdType.ACCT_ID);
+        user.setUserId(id);
+        usersDB.put(id, user);
         return usersDB.get(id);
     }
 
     @Override
-    public UserInfo getUser(long userId) throws TException {
+    public User getUser(long userId) throws TException {
         return usersDB.get(userId);
     }
 }

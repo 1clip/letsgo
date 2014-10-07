@@ -12,7 +12,7 @@ enum SignupType {
   FACEBOOK = 1
 }
 
-struct NewUser {
+struct User {
   1: string login_name,
   2: string friendly_name,
   3: Gender gender,
@@ -21,19 +21,10 @@ struct NewUser {
   6: string cell_phone,
   7: SignupType sign_up_type,
   8: string sign_up_token,
-}
-
-struct UserInfo {
-  1: i64 user_id,
-  2: string login_name,
-  3: string friendly_name,
-  4: Gender gender,
-  5: string date_of_birth,
-  6: optional avatar.AvatarInfo avatar,
-  7: string cell_phone
+  9: optional i64 user_id
 }
 
 service IdentityService {
-  UserInfo create_user(1:NewUser user)
-  UserInfo get_user(1:i64 user_id)
+  User create_user(1:User user)
+  User get_user(1:i64 user_id)
 }

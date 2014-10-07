@@ -14,15 +14,10 @@ import com.google.inject.Singleton;
 public class HangoutServer {
     public static final String serviceName = "hangout";
     public static final int defaultServerPort = 7167;
-    private final int serverPort;
     private SwiftServer server;
 
-    public HangoutServer(int serverPort) {
-        this.serverPort = serverPort;
-    }
-
     public void start() {
-        server = new SwiftServer(serviceName, serverPort, new Module() {
+        server = new SwiftServer(serviceName, defaultServerPort, new Module() {
             @Override
             public void configure(Binder binder) {
                 binder.bind(HangoutServiceImpl.class).in(Scopes.SINGLETON);
@@ -40,6 +35,6 @@ public class HangoutServer {
     }
 
     public static void main(String[] args) {
-        new HangoutServer(defaultServerPort).start();
+        new HangoutServer().start();
     }
 }
