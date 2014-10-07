@@ -35,7 +35,7 @@ public class IdentityServiceImpl implements IdentityService {
            throw new TException("failed to clone user");
         }
         long id = IceflakeClientHolder.Instance.getId(IdType.ACCT_ID);
-        user.setUserId(id);
+        user.setId(id);
         usersDB.put(id, user);
         return usersDB.get(id);
     }

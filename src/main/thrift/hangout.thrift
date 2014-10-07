@@ -26,7 +26,7 @@ struct Participator {
    4: Role role
    5: optional string login_name
    6: optional string friendly_name
-   7: optional avatar.AvatarInfo avatarInfo
+   7: optional avatar.AvatarInfo avatar_info
    8: optional string error_code
 }
 
@@ -37,7 +37,7 @@ struct HangoutSummary {
    4: Participator organizer
    5: HangoutState state
    6: i32 num_accepted
-   7: i32 num_declined
+   7: i32 num_rejected
    8: i32 num_pending
 }
 
@@ -61,7 +61,7 @@ struct HangoutInfo {
    6: HangoutState state
    7: list<i64> participators
    8: i32 num_accepted
-   9: i32 num_declined
+   9: i32 num_rejected
    10:i32 num_pending
    11: i64 organizer_id
 }

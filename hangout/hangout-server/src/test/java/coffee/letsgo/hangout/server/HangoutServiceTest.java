@@ -38,37 +38,37 @@ public class HangoutServiceTest {
     public void TestHangoutFlow() throws TException{
         // post user u1
         User u1 = createUser();
-        verifyNotNull(u1.getUserId());
+        verifyNotNull(u1.getId());
 
         // post user u2
         User u2 = createUser();
-        verifyNotNull(u2.getUserId());
+        verifyNotNull(u2.getId());
 
         // post hangout
-        Hangout hangout = createHangout(u1.getUserId(), u2.getUserId());
+        Hangout hangout = createHangout(u1.getId(), u2.getId());
         verify(hangout != null && hangout.getId() != null);
 
         // get hangout by id
-        Hangout hangout1 = getHangoutById(u1.getUserId(), hangout.getId());
-        Hangout hangout2 = getHangoutById(u2.getUserId(), hangout.getId());
+        Hangout hangout1 = getHangoutById(u1.getId(), hangout.getId());
+        Hangout hangout2 = getHangoutById(u2.getId(), hangout.getId());
         verify(hangout1 != null && hangout2 != null);
 
         // get hangout summary by status
-        List<HangoutSummary> hangoutSummaries = getHangoutByStatus(u1.getUserId(), HangoutState.ACTIVE);
+        List<HangoutSummary> hangoutSummaries = getHangoutByStatus(u1.getId(), HangoutState.ACTIVE);
         verify(hangoutSummaries != null && hangoutSummaries.size() == 1 && hangoutSummaries.get(0).getNumAccepted() == 0);
 
         // patch hangout status
-        updateHangoutStatus(u2.getUserId(), hangout.getId());
+        updateHangoutStatus(u2.getId(), hangout.getId());
 
         // get hangout summary by status again
-        hangoutSummaries = getHangoutByStatus(u1.getUserId(), HangoutState.ACTIVE);
+        hangoutSummaries = getHangoutByStatus(u1.getId(), HangoutState.ACTIVE);
         verify(hangoutSummaries != null && hangoutSummaries.size() == 1 && hangoutSummaries.get(0).getNumAccepted() == 1);
 
-        Hangout hangout_new = createHangout(u2.getUserId(), u1.getUserId());
+        Hangout hangout_new = createHangout(u2.getId(), u1.getId());
         verify(hangout_new != null && hangout_new.getId() != null);
 
         // get hangout summary by status
-        hangoutSummaries = getHangoutByStatus(u2.getUserId(), HangoutState.ACTIVE);
+        hangoutSummaries = getHangoutByStatus(u2.getId(), HangoutState.ACTIVE);
         verify(hangoutSummaries != null && hangoutSummaries.size() == 2);
     }
 
@@ -119,7 +119,7 @@ public class HangoutServiceTest {
         AvatarInfo avatarInfo = new AvatarInfo();
         avatarInfo.setAvatarId(random.nextLong());
         avatarInfo.setAvatarToken(random.nextLong());
-        user.setAvatar(avatarInfo);
+        user.setAvatarInfo(avatarInfo);
         return IdentityClient.getInstance().createUser(user);
     }
 

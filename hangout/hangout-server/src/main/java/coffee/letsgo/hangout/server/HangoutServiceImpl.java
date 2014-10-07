@@ -101,7 +101,7 @@ public class HangoutServiceImpl implements HangoutService {
                 participator.setComment(userHangoutInfo.getComment());
                 participator.setLoginName(p.getLoginName());
                 participator.setFriendlyName(p.getFriendlyName());
-                participator.setAvatarInfo(p.getAvatar());
+                participator.setAvatarInfo(p.getAvatarInfo());
                 hangout.getParticipators().add(participator);
             }
             return hangout;
@@ -139,7 +139,7 @@ public class HangoutServiceImpl implements HangoutService {
                     hangOutSummary.setState(hangoutState);
                     hangOutSummary.setNumPending(hangOutInfo.getNumPending());
                     hangOutSummary.setNumAccepted(hangOutInfo.getNumAccepted());
-                    hangOutSummary.setNumDeclined(hangOutInfo.getNumDeclined());
+                    hangOutSummary.setNumRejected(hangOutInfo.getNumRejected());
 
                     userInfo = IdentityClientHolder.instance.getUser(hangOutInfo.getOrganizerId());
                     if (userInfo == null) {
@@ -149,7 +149,7 @@ public class HangoutServiceImpl implements HangoutService {
                     organizer.setId(hangOutInfo.getOrganizerId());
                     organizer.setLoginName(userInfo.getLoginName());
                     organizer.setFriendlyName(userInfo.getFriendlyName());
-                    organizer.setAvatarInfo(userInfo.getAvatar());
+                    organizer.setAvatarInfo(userInfo.getAvatarInfo());
                     hangOutSummary.setOrganizer(organizer);
 
                     hangoutSummaries.add(hangOutSummary);
@@ -183,7 +183,7 @@ public class HangoutServiceImpl implements HangoutService {
 
         int accepted = hangOutInfo.getNumAccepted();
         int pending = hangOutInfo.getNumPending();
-        int reject = hangOutInfo.getNumDeclined();
+        int reject = hangOutInfo.getNumRejected();
 
         switch (p.getState()) {
             default:
@@ -212,7 +212,7 @@ public class HangoutServiceImpl implements HangoutService {
         }
         hangOutInfo.setNumAccepted(accepted);
         hangOutInfo.setNumPending(pending);
-        hangOutInfo.setNumDeclined(reject);
+        hangOutInfo.setNumRejected(reject);
 
         hangOutsDB.put(hangOutId, hangOutInfo);
     }
