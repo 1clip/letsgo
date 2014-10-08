@@ -4,6 +4,7 @@ import coffee.letsgo.gateway.util.Constants;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.LongSerializationPolicy;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpRequest;
@@ -20,6 +21,7 @@ public abstract class RequestProcessor {
     protected Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setDateFormat("yyyy-MM-dd")
+            .setLongSerializationPolicy(LongSerializationPolicy.STRING)
             .create();
 
     public RequestProcessor() {
