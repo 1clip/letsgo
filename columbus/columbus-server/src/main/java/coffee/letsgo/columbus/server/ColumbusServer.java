@@ -49,6 +49,18 @@ public abstract class ColumbusServer {
                     serviceDeamon.addMember(String.format("%s:%d", localhost.trim(), port));
             logger.info("starting columbus server on {}", serviceUri);
             run();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    logger.warn("shutting down {}", serviceName);
+                    try {
+                        shutdown();
+                        logger.warn("service {} stopped", serviceName);
+                    } catch (Exception ex) {
+                        logger.error("failed to shutdown service " + serviceName, ex);
+                    }
+                }
+            });
             serviceDeamon.activate(serviceUri);
             startedSwitch = true;
             logger.info("columbus server on {} started", serviceUri);
@@ -62,10 +74,11 @@ public abstract class ColumbusServer {
 
     public final void shutdown() {
         if (!startedSwitch) {
-            logger.warn("columbus server not started");
+            logger.warn("columbus service {} not started", serviceName);
             return;
         }
         try {
+            logger.warn("deactivating service {}", serviceName);
             serviceDeamon.deactivate(serviceUri);
             startedSwitch = false;
         } catch (Exception ex) {
@@ -79,13 +92,13 @@ public abstract class ColumbusServer {
             logger.error("failed to shutdown service deamon for " + serviceName, ex);
         }
         if (startedSwitch) {
-            throw new ColumbusServerRuntimeException("failed to shutdown columbus server");
+            throw new ColumbusServerRuntimeException("failed to shutdown columbus server {}", serviceName);
         }
         try {
             stop();
         } catch (Exception ex) {
-            logger.error("failed to stop concrete server", ex);
-            throw new ColumbusServerRuntimeException("failed to stop concrete server", ex);
+            logger.error("failed to stop concrete server " + serviceName, ex);
+            throw new ColumbusServerRuntimeException("failed to stop concrete server " + serviceName, ex);
         }
     }
 }
