@@ -1,15 +1,18 @@
 package coffee.letsgo.gateway.processor;
 
+import coffee.letsgo.gateway.exception.BadRequestException;
 import coffee.letsgo.gateway.exception.GatewayException;
 import coffee.letsgo.hangout.Hangout;
 import coffee.letsgo.hangout.HangoutService;
 import coffee.letsgo.hangout.HangoutSummary;
+import coffee.letsgo.hangout.Participator;
 import coffee.letsgo.hangout.client.HangoutClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import org.apache.thrift.TException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +23,7 @@ import java.util.regex.Pattern;
 public class HangoutProcessor extends RequestProcessor {
     private final Pattern hangoutIdPattern = Pattern.compile("^/hangouts/(\\d+)$");
     private final Pattern hangoutStatusFilterPattern = Pattern.compile("^/hangouts\\?state=([a-zA-Z]*)$");
+    private final Pattern hangoutsPattern = Pattern.compile("^/hangouts$");
     private final HangoutService hangoutClient = HangoutClient.getInstance();
 
     @Override
@@ -32,18 +36,30 @@ public class HangoutProcessor extends RequestProcessor {
                 long hid = Long.parseLong(idMatcher.group(1));
                 return gson.toJson(getHangout(uid, hid));
             }
-            if(stMatcher.matches()) {
+            if (stMatcher.matches()) {
                 String state = stMatcher.group(1);
                 return gson.toJson(getHangoutsByStatus(uid, state));
             }
-            throw new GatewayException("failed to process");
+            throw new BadRequestException("unsupported GET request uri: " + req.getUri());
         } else if (req.getMethod() == HttpMethod.POST) {
-            Hangout hangout = decodeRequestBody(req, Hangout.class);
-            return gson.toJson(createHangout(uid, hangout));
+            Matcher hsMatcher = hangoutsPattern.matcher(req.getUri());
+            if (hsMatcher.matches()) {
+                Hangout hangout = decodeRequestBody(req, Hangout.class);
+                return gson.toJson(createHangout(uid, hangout));
+            }
+            throw new BadRequestException("unsupported POST request uri: " + req.getUri());
         } else if (req.getMethod() == HttpMethod.PATCH) {
-            throw new GatewayException("unimplemented patch");
+            Matcher idMatcher = hangoutIdPattern.matcher(req.getUri());
+            if (idMatcher.matches()) {
+                long hid = Long.parseLong(idMatcher.group(1));
+                List<Participator> participators = decodeRequestBody(req, new ArrayList<Participator>() {
+                }.getClass());
+                updateHangout(uid, hid, participators);
+                return gson.toJson("{}");
+            }
+            throw new BadRequestException("unsupported PATCH request uri: " + req.getUri());
         } else {
-            throw new GatewayException("failed to process");
+            throw new BadRequestException("unsupported method " + req.getMethod().name());
         }
     }
 
@@ -57,5 +73,9 @@ public class HangoutProcessor extends RequestProcessor {
 
     private Hangout createHangout(long uid, Hangout hangout) throws TException {
         return hangoutClient.createHangout(uid, hangout);
+    }
+
+    private void updateHangout(long uid, long hid, List<Participator> participators) throws TException {
+        hangoutClient.updateHangoutStatus(uid, hid, participators);
     }
 }
