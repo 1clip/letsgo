@@ -78,5 +78,5 @@ service HangoutService {
     Hangout createHangout(1:i64 userId, 2:Hangout hangOut)
     Hangout getHangoutById(1:i64 userId, 2:i64 hangOutId)
     list<HangoutSummary> getHangoutByStatus(1:i64 userId, 2:string status)
-    void updateHangoutStatus(1:i64 userId, 2:i64 hangOutId, 3:list<Participator> participators)
+    void updateHangoutStatus(1:i64 userId, 2:i64 hangOutId, 3:Hangout hangout)
 }

@@ -51,9 +51,8 @@ public class HangoutProcessor extends RequestProcessor {
             Matcher idMatcher = hangoutIdPattern.matcher(req.getUri());
             if (idMatcher.matches()) {
                 long hid = Long.parseLong(idMatcher.group(1));
-                List<Participator> participators = decodeRequestBody(req, new ArrayList<Participator>() {
-                }.getClass());
-                updateHangout(uid, hid, participators);
+                Hangout hangout = decodeRequestBody(req, Hangout.class);
+                updateHangout(uid, hid, hangout);
                 return gson.toJson("{}");
             }
             throw new BadRequestException("unsupported PATCH request uri: " + req.getUri());
@@ -74,7 +73,7 @@ public class HangoutProcessor extends RequestProcessor {
         return hangoutClient.createHangout(uid, hangout);
     }
 
-    private void updateHangout(long uid, long hid, List<Participator> participators) throws TException {
-        hangoutClient.updateHangoutStatus(uid, hid, participators);
+    private void updateHangout(long uid, long hid, Hangout hangout) throws TException {
+        hangoutClient.updateHangoutStatus(uid, hid, hangout);
     }
 }
