@@ -22,5 +22,6 @@
         <module>hangout</module>
         <module>gateway</module>
         <module>service-starter</module>
+        <module>storeland</module>
     </modules>
 </project>

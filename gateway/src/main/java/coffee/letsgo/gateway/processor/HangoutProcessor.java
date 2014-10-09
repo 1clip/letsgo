@@ -1,7 +1,6 @@
 package coffee.letsgo.gateway.processor;
 
 import coffee.letsgo.gateway.exception.BadRequestException;
-import coffee.letsgo.gateway.exception.GatewayException;
 import coffee.letsgo.hangout.Hangout;
 import coffee.letsgo.hangout.HangoutService;
 import coffee.letsgo.hangout.HangoutSummary;
