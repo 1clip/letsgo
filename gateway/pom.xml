@@ -17,7 +17,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>coffee.letsgo</groupId>
+            <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-client</artifactId>
             <version>${project.version}</version>
         </dependency>

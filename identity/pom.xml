@@ -18,5 +18,6 @@
     <modules>
         <module>identity-client</module>
         <module>identity-server</module>
+        <module>identity-store</module>
     </modules>
 </project>

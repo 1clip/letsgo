@@ -22,7 +22,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>coffee.letsgo</groupId>
+            <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-client</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -58,7 +58,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>coffee.letsgo</groupId>
+            <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
