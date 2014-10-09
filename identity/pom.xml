@@ -12,7 +12,7 @@
     <properties>
         <thrift.root>${project.parent.basedir}/${thrift.relative_path}</thrift.root>
     </properties>
-
+    <groupId>coffee.letsgo.identity</groupId>
     <artifactId>identity</artifactId>
     <packaging>pom</packaging>
     <modules>

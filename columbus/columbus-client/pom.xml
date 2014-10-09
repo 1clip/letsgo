@@ -4,12 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>columbus</artifactId>
-        <groupId>coffee.letsgo</groupId>
+        <groupId>coffee.letsgo.columbus</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>coffee.letsgo.columbus</groupId>
     <artifactId>columbus-client</artifactId>
 
     <dependencies>
