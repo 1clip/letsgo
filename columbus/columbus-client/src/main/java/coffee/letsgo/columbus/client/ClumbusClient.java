@@ -55,7 +55,7 @@ public class ClumbusClient {
     public <C> ListenableFuture<C> createClient(final Class<C> cliClazz,
                                                 final Class<? extends LoadBalancer> lbClazz,
                                                 final Function<String, ListenableFuture<C>> tunnelCreator) {
-        return createClient(cliClazz, lbClazz, tunnelCreator, 2);
+        return createClient(cliClazz, lbClazz, tunnelCreator, 1);
     }
 
     public <C> ListenableFuture<C> createClient(final Class<C> cliClazz,
