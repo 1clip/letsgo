@@ -18,14 +18,14 @@ public class IceflakeImpl implements Iceflake {
     private long[] sequences;
     private long[] lastTimestamps;
 
-    private static long epoch = 1409436471455L;
+    private static long epoch = 1412918579215L;
 
     /*
-     * bits: 1    7                        40                      6       10
-     *      +-+-------+----------------------------------------+------+----------+
-     *      |0|  id   |               milliseconds             |worker| sequence |
-     *      |0| type  |               since epoch              |  id  |  number  |
-     *      +-+-------|----------------------------------------+------+----------+
+     * bits: 1                      40                     7       6       10
+     *      +-+----------------------------------------+-------+------+----------+
+     *      |0|               milliseconds             |  id   |worker| sequence |
+     *      |0|               since epoch              | type  |  id  |  number  |
+     *      +-|----------------------------------------+-------+------+----------+
      *       ^
      *       |
      *       +-- msb
@@ -39,11 +39,11 @@ public class IceflakeImpl implements Iceflake {
     private static int
             sequenceBits = 10,
             workerIdBits = 6,
-            timeStampBits = 40,
             idTypeBits = 7,
+            timeStampBits = 40,
             workerIdShift = sequenceBits,
-            timestampLeftShift = sequenceBits + workerIdBits,
-            idTypeShift = sequenceBits + workerIdBits + timeStampBits;
+            idTypeShift = sequenceBits + workerIdBits,
+            timestampLeftShift = sequenceBits + workerIdBits + idTypeBits;
 
     private static long
             maxWorkerId = ~(-1 << workerIdBits),
@@ -106,8 +106,8 @@ public class IceflakeImpl implements Iceflake {
             }
 
             lastTimestamps[type] = timestamp;
-            return ((long) type << idTypeShift |
-                    (timestamp - epoch) << timestampLeftShift) |
+            return ((timestamp - epoch) << timestampLeftShift) |
+                    (long) type << idTypeShift |
                     (workerId << workerIdShift) |
                     sequences[type];
         }
