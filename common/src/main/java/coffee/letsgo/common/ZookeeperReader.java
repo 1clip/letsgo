@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by xbwu on 10/13/14.
@@ -19,50 +20,39 @@ import java.io.IOException;
 public class ZookeeperReader {
 
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperReader.class);
-    private final StorageManagement<String, String> cache = new StorageManagementLRUImpl<String, String>(4096);
-    private final String connectString;
-    private ZooKeeper zk;
+    private final StorageManagement<String, String> dataCache = new StorageManagementLRUImpl<String, String>(4096);
+    private final StorageManagement<String, List<String>> childrenCache = new StorageManagementLRUImpl<String, List<String>>(4096);
+    private final ZookeeperClientHolder zookeeperClientHolder;
 
     public ZookeeperReader(String connectString) {
-        this.connectString = connectString;
-        buildZookeeperClient();
+        zookeeperClientHolder = new ZookeeperClientHolder(connectString);
     }
 
-    public String read(String path) {
+    public String getData(String path) {
         String val;
         try {
-            val = cache.get(path);
+            val = dataCache.get(path);
         } catch (NotFoundException ex) {
-            val = readFromZookeeper(path);
-            cache.put(path, val);
+            val = readDataFromZookeeper(path);
+            dataCache.put(path, val);
         }
         return val;
     }
 
-    private String readFromZookeeper(final String path) {
-        if (zk == null) {
-            synchronized (connectString) {
-                if (zk == null) {
-                    buildZookeeperClient();
-                }
-            }
-        }
-        if (zk == null) {
-            throw new ZookeeperException("not able to obtain zookeeper client instance");
-        }
+    public List<String> getChildren(String path) {
+        List<String> val;
         try {
-            return new String(zk.getData(path, new Watcher() {
-                @Override
-                public void process(WatchedEvent watchedEvent) {
-                    if (watchedEvent.getType() == Event.EventType.NodeDataChanged ||
-                            watchedEvent.getType() == Event.EventType.NodeDeleted) {
-                        if (watchedEvent.getPath().equals(path)) {
-                            logger.info("invalid data {}", path);
-                            cache.invalid(path);
-                        }
-                    }
-                }
-            }, null));
+            val = childrenCache.get(path);
+        } catch (NotFoundException ex) {
+            val = readChildrenFromZookeeper(path);
+            childrenCache.put(path, val);
+        }
+        return val;
+    }
+
+    private String readDataFromZookeeper(final String path) {
+        try {
+            return new String(zookeeperClientHolder.getInstance().getData(path, true, null));
         } catch (KeeperException ex) {
             logger.error("failed to read data of path " + path, ex);
             throw new ZookeeperException("keeper exception caught", ex);
@@ -72,42 +62,116 @@ public class ZookeeperReader {
         }
     }
 
-    private void buildZookeeperClient() {
-        logger.info("building zookeeper client");
+    private List<String> readChildrenFromZookeeper(final String path) {
         try {
-            zk = new ZooKeeper(connectString, 30 * 60 * 1000, new Watcher() {
-                @Override
-                public void process(WatchedEvent watchedEvent) {
-                    logger.debug("zookeeper event: {}", watchedEvent.getType().name());
-                    switch (watchedEvent.getType()) {
-                        case None:
-                            processSystemEvent(watchedEvent);
-                            break;
-                    }
-                }
+            return zookeeperClientHolder.getInstance().getChildren(path, true);
+        } catch (KeeperException ex) {
+            logger.error("failed to read data of path " + path, ex);
+            throw new ZookeeperException("keeper exception caught", ex);
+        } catch (InterruptedException ex) {
+            logger.error("failed to read data of path " + path, ex);
+            throw new ZookeeperException("interrupted exception caught", ex);
+        }
+    }
 
-                private void processSystemEvent(WatchedEvent watchedEvent) {
-                    switch (watchedEvent.getState()) {
-                        case SyncConnected:
-                            logger.info("zk connected");
-                            break;
-                        case Disconnected:
-                            logger.warn("zk disconnected");
-                            cache.clear();
-                            break;
-                        case Expired:
-                            logger.warn("zk connection expired");
-                            cache.clear();
-                            buildZookeeperClient();
-                            break;
-                        default:
-                            break;
-                    }
+    private class ZookeeperClientHolder {
+        private final String connectString;
+        private ZooKeeper zk = null;
+
+        public ZookeeperClientHolder(String connectString) {
+            this.connectString = connectString;
+        }
+
+        ZooKeeper getInstance() {
+            if (zk == null) {
+                synchronized (this) {
+                    buildZookeeperClient();
                 }
-            });
-        } catch (IOException ex) {
-            logger.error("failed to establish zk connection", ex);
-            zk = null;
+            }
+            if (zk == null) {
+                throw new ZookeeperException("not able to obtain zookeeper client instance");
+            }
+            return zk;
+        }
+
+        private void buildZookeeperClient() {
+            logger.info("building zookeeper client");
+            try {
+                zk = new ZooKeeper(connectString, 30 * 60 * 1000, new Watcher() {
+                    @Override
+                    public void process(WatchedEvent watchedEvent) {
+                        logger.debug("zookeeper event: {}", watchedEvent.getType().name());
+                        switch (watchedEvent.getType()) {
+                            case None:
+                                processSystemEvent(watchedEvent);
+                                break;
+                            case NodeDataChanged:
+                                processDataChanged(watchedEvent);
+                                break;
+                            case NodeDeleted:
+                                processNodeDeleted(watchedEvent);
+                                break;
+                            case NodeChildrenChanged:
+                                processChildrenChanged(watchedEvent);
+                                break;
+                        }
+                    }
+
+                    private void processSystemEvent(WatchedEvent watchedEvent) {
+                        switch (watchedEvent.getState()) {
+                            case SyncConnected:
+                                logger.info("zk connected");
+                                break;
+                            case Disconnected:
+                                logger.warn("zk disconnected");
+                                dataCache.clear();
+                                break;
+                            case Expired:
+                                logger.warn("zk connection expired");
+                                dataCache.clear();
+                                buildZookeeperClient();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    private void processDataChanged(WatchedEvent watchedEvent) {
+                        String path = watchedEvent.getPath();
+                        if (dataCache.contains(path)) {
+                            try {
+                                readDataFromZookeeper(path);
+                            } catch (Exception ex) {
+                                dataCache.invalid(path);
+                            }
+                        }
+                    }
+
+                    private void processNodeDeleted(WatchedEvent watchedEvent) {
+                        String path = watchedEvent.getPath();
+                        if (dataCache.contains(path)) {
+                            dataCache.invalid(path);
+                        }
+                        if (childrenCache.contains(path)) {
+                            childrenCache.invalid(path);
+                        }
+                    }
+
+                    private void processChildrenChanged(WatchedEvent watchedEvent) {
+                        String path = watchedEvent.getPath();
+                        if (childrenCache.contains(path)) {
+                            try {
+                                readChildrenFromZookeeper(path);
+                            } catch (Exception ex) {
+                                childrenCache.invalid(path);
+                            }
+                        }
+                    }
+                });
+            } catch (IOException ex) {
+                logger.error("failed to establish zk connection", ex);
+                zk = null;
+            }
         }
     }
 }
