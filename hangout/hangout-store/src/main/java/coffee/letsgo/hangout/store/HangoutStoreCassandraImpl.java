@@ -4,6 +4,8 @@ import coffee.letsgo.hangout.store.model.HangoutData;
 import coffee.letsgo.hangout.store.model.HangoutFolkData;
 import coffee.letsgo.storeland.CassandraSessionBuilder;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.mapping.Mapper;
+import com.datastax.driver.mapping.MappingManager;
 
 import java.util.List;
 
@@ -14,7 +16,7 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
 
     @Override
     public void setHangout(HangoutData hangoutData) {
-
+        CassandraSessionHolder.hangoutMapper.save(hangoutData);
     }
 
     @Override
@@ -43,10 +45,13 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     }
 
     private static class CassandraSessionHolder {
-        private static Session session = new CassandraSessionBuilder("hangout").build();
+        private static Session session =
+                new CassandraSessionBuilder("hangout").build();
 
-        private static Session getSession() {
-            return session;
-        }
+        private static Mapper<HangoutData> hangoutMapper =
+                new MappingManager(session).mapper(HangoutData.class);
+
+        private static Mapper<HangoutFolkData> hangoutFolkMapper =
+                new MappingManager(session).mapper(HangoutFolkData.class);
     }
 }
