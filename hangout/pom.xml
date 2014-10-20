@@ -19,6 +19,7 @@
     <modules>
         <module>hangout-server</module>
         <module>hangout-client</module>
+        <module>hangout-store</module>
     </modules>
 
 
