@@ -14,7 +14,7 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
 
     @Override
     public void setHangout(HangoutData hangoutData) {
-        
+
     }
 
     @Override
