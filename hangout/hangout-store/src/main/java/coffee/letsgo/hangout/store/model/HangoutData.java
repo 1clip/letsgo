@@ -3,6 +3,7 @@ package coffee.letsgo.hangout.store.model;
 import java.util.Date;
 import java.util.Set;
 
+import coffee.letsgo.hangout.store.Constants;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
@@ -10,7 +11,7 @@ import com.datastax.driver.mapping.annotations.Table;
 /**
  * Created by xbwu on 10/18/14.
  */
-@Table(keyspace = "letsgo", name = "hangout")
+@Table(keyspace = Constants.keyspace, name = Constants.hangoutTableName)
 public class HangoutData {
     @PartitionKey
     @Column(name = "hangout_id")

@@ -1,23 +1,22 @@
 package coffee.letsgo.hangout.store.model;
 
+import coffee.letsgo.hangout.store.Constants;
 import com.datastax.driver.mapping.EnumType;
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.Enumerated;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
+import com.datastax.driver.mapping.annotations.*;
 
 import java.util.Date;
 
 /**
  * Created by xbwu on 10/18/14.
  */
-@Table(keyspace = "letsgo", name = "hangout_folks")
+@Table(keyspace = Constants.keyspace, name = Constants.hangoutFolkTableName)
 public class HangoutFolkData {
 
     @PartitionKey
     @Column(name = "user_id")
     private long userId;
 
+    @ClusteringColumn
     @Column(name = "hangout_id")
     private long hangoutId;
 
