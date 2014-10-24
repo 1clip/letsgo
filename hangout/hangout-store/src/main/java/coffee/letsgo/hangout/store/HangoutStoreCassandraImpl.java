@@ -34,10 +34,6 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     private final ListeningExecutorService executorPool =
             MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
 
-    private final PreparedStatement getHangoutsByUserIdStatement =
-            session.prepare(String.format("SELECT * FROM %s.%s WHERE user_id = ?",
-                    Constants.keyspace, Constants.hangoutTableName));
-
     private static final Function<Object, Void> NOOP = Functions.constant(null);
     private static final Function<ResultSet, List<HangoutFolkData>> hangoutFolksFetcher =
             new Function<ResultSet, List<HangoutFolkData>>() {
@@ -103,8 +99,6 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
 
     @Override
     public ListenableFuture<List<HangoutData>> getHangouts(long userId) {
-        return Futures.transform(
-                session.executeAsync(getHangoutsByUserIdStatement.bind(userId)),
-                hangoutsFetcher);
+        return null;
     }
 }

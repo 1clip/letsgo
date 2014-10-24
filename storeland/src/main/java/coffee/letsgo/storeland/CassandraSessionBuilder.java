@@ -5,6 +5,8 @@ import coffee.letsgo.common.ZookeeperReader;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 
+import java.util.List;
+
 /**
  * Created by xbwu on 10/15/14.
  */
@@ -29,7 +31,9 @@ public class CassandraSessionBuilder {
     }
 
     private String[] getNodes() {
-        return (String[]) zookeeperReader.getChildren(
-                String.format("%s/%s/nodes", zkCassandraClusterPath, clusterName)).toArray();
+        String path = String.format("%s/%s/nodes", zkCassandraClusterPath, clusterName);
+        List<String> list =  zookeeperReader.getChildren(String.format("%s/%s/nodes", zkCassandraClusterPath, clusterName));
+        String[] nodes = new String[list.size()];
+        return list.toArray(nodes);
     }
 }

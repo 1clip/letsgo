@@ -27,8 +27,18 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>coffee.letsgo.hangout</groupId>
+            <artifactId>hangout-store</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>server-swift</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>coffee.letsgo</groupId>
+            <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

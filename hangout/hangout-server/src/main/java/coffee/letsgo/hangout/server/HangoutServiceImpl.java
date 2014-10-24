@@ -1,6 +1,10 @@
 package coffee.letsgo.hangout.server;
 
+import coffee.letsgo.common.Common;
 import coffee.letsgo.hangout.*;
+import coffee.letsgo.hangout.store.HangoutStore;
+import coffee.letsgo.hangout.store.HangoutStoreCassandraImpl;
+import coffee.letsgo.hangout.store.model.HangoutData;
 import coffee.letsgo.iceflake.Iceflake;
 import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;
@@ -9,9 +13,9 @@ import coffee.letsgo.identity.client.IdentityClient;
 import com.facebook.swift.codec.ThriftField;
 import org.apache.thrift.TException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,6 +24,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HangoutServiceImpl implements HangoutService {
     private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, UserHangoutInfo>> userHangOutsDB = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, HangoutInfo> hangOutsDB = new ConcurrentHashMap<>();
+
+
+    private static class HangoutStoreHolder {
+        private static final HangoutStore instance = new HangoutStoreCassandraImpl();
+    }
 
     private static class IceflakeClientHolder {
         private static Iceflake Instance = IceflakeClient.getInstance();
@@ -31,10 +40,7 @@ public class HangoutServiceImpl implements HangoutService {
 
     @Override
     public Hangout createHangout(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "hangOut", requiredness = ThriftField.Requiredness.NONE) Hangout hangOut) throws TException {
-        User userInfo = IdentityClientHolder.instance.getUser(userId);
-        if (userInfo == null) {
-            return null;
-        }
+
         long hangOutId = IceflakeClientHolder.Instance.getId(IdType.HANGOUT_ID);
         hangOut.setId(hangOutId);
 
@@ -49,15 +55,11 @@ public class HangoutServiceImpl implements HangoutService {
         }
         hangoutInfo.setOrganizerId(organizer.getId());
         hangOutsDB.put(hangOutId, hangoutInfo);
+        try {
+            HangoutData hangoutData = toHangoutData(hangOut, organizer);
+            HangoutStoreHolder.instance.setHangout(hangoutData);
+        } catch (ParseException ex) {
 
-        List<UserHangoutInfo> userHangoutInfos = toUserHangoutInfos(hangOut, organizer);
-        for (UserHangoutInfo uh : userHangoutInfos) {
-            ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOutsDB.get(uh.getUserId());
-            if (uhs == null) {
-                uhs = new ConcurrentHashMap<>();
-            }
-            uhs.put(hangOutId, uh);
-            userHangOutsDB.put(uh.getUserId(), uhs);
         }
         return hangOut;
     }
@@ -216,6 +218,27 @@ public class HangoutServiceImpl implements HangoutService {
         hangOutInfo.setNumRejected(reject);
 
         hangOutsDB.put(hangOutId, hangOutInfo);
+    }
+
+    private HangoutData toHangoutData(Hangout hangout, Participator organizer) throws ParseException {
+        if (hangout == null || organizer == null) {
+            return null;
+        }
+        HangoutData hangoutData = new HangoutData();
+        hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
+        hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
+        hangoutData.setLocation(hangout.getLocation());
+        hangoutData.setSubject(hangout.getSubject());
+        Set<Long> participators = new HashSet<>();
+        if (hangout.getParticipators() != null) {
+            for (Participator participator : hangout.getParticipators()) {
+                if (participator.getId() != organizer.getId()) {
+                    participators.add(participator.getId());
+                }
+            }
+        }
+        hangoutData.setParticipators(participators);
+        return hangoutData;
     }
 
     private HangoutInfo toHangoutInfo(Hangout hangOut, Participator organizer) {
