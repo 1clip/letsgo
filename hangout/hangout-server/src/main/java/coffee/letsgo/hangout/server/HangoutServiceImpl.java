@@ -39,8 +39,13 @@ public class HangoutServiceImpl implements HangoutService {
     }
 
     @Override
-    public Hangout createHangout(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "hangOut", requiredness = ThriftField.Requiredness.NONE) Hangout hangOut) throws TException {
+    public Hangout createHangout(
+            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
+            @ThriftField(value = 2, name = "hangOut", requiredness = ThriftField.Requiredness.NONE) Hangout hangOut)
+            throws TException {
 
+        verifyUser(userId);
+        verifyParticipators(hangOut.getParticipators());
         long hangOutId = IceflakeClientHolder.Instance.getId(IdType.HANGOUT_ID);
         hangOut.setId(hangOutId);
 
@@ -49,12 +54,6 @@ public class HangoutServiceImpl implements HangoutService {
         organizer.setRole(Role.ORGANIZER);
         organizer.setState(ParticipatorState.ACCEPT);
 
-        HangoutInfo hangoutInfo = toHangoutInfo(hangOut, organizer);
-        if (hangoutInfo == null) {
-            return null;
-        }
-        hangoutInfo.setOrganizerId(organizer.getId());
-        hangOutsDB.put(hangOutId, hangoutInfo);
         try {
             HangoutData hangoutData = toHangoutData(hangOut, organizer);
             HangoutStoreHolder.instance.setHangout(hangoutData);
@@ -220,6 +219,21 @@ public class HangoutServiceImpl implements HangoutService {
         hangOutsDB.put(hangOutId, hangOutInfo);
     }
 
+    private User verifyUser(long userId) throws TException {
+        return IdentityClientHolder.instance.getUser(userId);
+    }
+
+    private Map<Long, User> verifyParticipators(List<Participator> participators) throws TException {
+        if (participators == null || participators.isEmpty()) {
+            return new HashMap<>();
+        }
+        Set<Long> ids = new HashSet<>();
+        for (Participator p : participators) {
+            ids.add(p.getId());
+        }
+        return IdentityClientHolder.instance.getUsers(ids);
+    }
+
     private HangoutData toHangoutData(Hangout hangout, Participator organizer) throws ParseException {
         if (hangout == null || organizer == null) {
             return null;
@@ -238,6 +252,9 @@ public class HangoutServiceImpl implements HangoutService {
             }
         }
         hangoutData.setParticipators(participators);
+        Date now = new Date();
+        hangoutData.setCreatTime(now);
+        hangoutData.setUpdateTime(now);
         return hangoutData;
     }
 
