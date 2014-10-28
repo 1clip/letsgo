@@ -13,7 +13,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -61,7 +63,7 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     }
 
     @Override
-    public ListenableFuture<Void> setHangoutFolks(List<HangoutFolkData> hangoutFolks) {
+    public ListenableFuture<Void> setHangoutFolks(Set<HangoutFolkData> hangoutFolks) {
         BatchStatement batch = new BatchStatement();
         for (HangoutFolkData hangoutFolk : hangoutFolks) {
             batch.add(hangoutFolkMapper.saveQuery(hangoutFolk));

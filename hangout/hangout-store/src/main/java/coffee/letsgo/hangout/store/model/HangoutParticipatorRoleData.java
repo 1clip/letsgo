@@ -7,5 +7,5 @@ public enum HangoutParticipatorRoleData {
 
     ORGANIZER,
 
-    PATICIPATOR
+    INVITEE
 }

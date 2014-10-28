@@ -91,7 +91,7 @@ public class HangoutFolkData {
 
         if (hangoutId != that.hangoutId) return false;
         if (userId != that.userId) return false;
-        if (!comment.equals(that.comment)) return false;
+        if (comment != null ? !comment.equals(that.comment) : that.comment != null) return false;
         if (role != that.role) return false;
         if (state != that.state) return false;
         if (!updateTime.equals(that.updateTime)) return false;
@@ -105,7 +105,7 @@ public class HangoutFolkData {
         result = 31 * result + (int) (hangoutId ^ (hangoutId >>> 32));
         result = 31 * result + role.hashCode();
         result = 31 * result + state.hashCode();
-        result = 31 * result + comment.hashCode();
+        result = 31 * result + (comment != null ? comment.hashCode() : 0);
         result = 31 * result + updateTime.hashCode();
         return result;
     }

@@ -6,17 +6,23 @@ import coffee.letsgo.hangout.exception.DataFormatException;
 import coffee.letsgo.hangout.store.HangoutStore;
 import coffee.letsgo.hangout.store.HangoutStoreCassandraImpl;
 import coffee.letsgo.hangout.store.model.HangoutData;
+import coffee.letsgo.hangout.store.model.HangoutFolkData;
+import coffee.letsgo.hangout.store.model.HangoutParticipatorRoleData;
+import coffee.letsgo.hangout.store.model.HangoutParticipatorStateData;
 import coffee.letsgo.iceflake.Iceflake;
 import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;
-import coffee.letsgo.identity.*;
+import coffee.letsgo.identity.IdentityService;
+import coffee.letsgo.identity.User;
 import coffee.letsgo.identity.client.IdentityClient;
 import com.facebook.swift.codec.ThriftField;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DateFormat;
+import javax.validation.constraints.NotNull;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,25 +60,24 @@ public class HangoutServiceImpl implements HangoutService {
         long hangOutId = IceflakeClientHolder.Instance.getId(IdType.HANGOUT_ID);
         logger.debug("new hangout id: %s", hangOutId);
         hangOut.setId(hangOutId);
-
-        Participator organizer = new Participator();
-        organizer.setId(userId);
-        organizer.setRole(Role.ORGANIZER);
-        organizer.setState(ParticipatorState.ACCEPT);
         HangoutData hangoutData = toHangoutData(hangOut, userId);
         Date now = new Date();
         hangoutData.setCreatTime(now);
         hangoutData.setUpdateTime(now);
+        Set<HangoutFolkData> hangoutFolkDataSet = createHangoutFolkDataSet(hangoutData, userId);
         HangoutStoreHolder.instance.setHangout(hangoutData);
+        HangoutStoreHolder.instance.setHangoutFolks(hangoutFolkDataSet);
         return hangOut;
     }
 
     @Override
-    public Hangout getHangoutById(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId) throws TException {
-        User userInfo = IdentityClientHolder.instance.getUser(userId);
-        if (userInfo == null) {
-            return null;
-        }
+    public Hangout getHangoutById(
+            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
+            @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId)
+            throws TException {
+
+        verifyUser(userId);
+        HangoutStoreHolder.instance.getHangout(hangOutId);
         ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOutsDB.get(userId);
         if (uhs != null && uhs.get(hangOutId) != null) {
             HangoutInfo hangoutInfo = hangOutsDB.get(hangOutId);
@@ -265,6 +270,43 @@ public class HangoutServiceImpl implements HangoutService {
         }
         hangoutData.setParticipators(participators);
         return hangoutData;
+    }
+
+    private Set<HangoutFolkData> createHangoutFolkDataSet(
+            final HangoutData hangoutData,
+            final long organizerId) {
+
+        Set<HangoutFolkData> folkSet = new HashSet<>();
+        folkSet.add(createHangoutFolkData(organizerId, hangoutData.getHangoutId(), true, hangoutData.getUpdateTime()));
+        folkSet.addAll(Collections2.transform(
+                hangoutData.getParticipators(),
+                new Function<Long, HangoutFolkData>() {
+                    @NotNull
+                    @Override
+                    public HangoutFolkData apply(@NotNull Long id) {
+                        return createHangoutFolkData(id, hangoutData.getHangoutId(), false, hangoutData.getUpdateTime());
+                    }
+                }));
+        return folkSet;
+    }
+
+    private HangoutFolkData createHangoutFolkData(
+            final long userId,
+            final long hangoutId,
+            final boolean isOrganizer,
+            final Date dt) {
+
+        HangoutFolkData hangoutFolkData = new HangoutFolkData();
+        hangoutFolkData.setUserId(userId);
+        hangoutFolkData.setHangoutId(hangoutId);
+        hangoutFolkData.setRole(isOrganizer ?
+                HangoutParticipatorRoleData.ORGANIZER :
+                HangoutParticipatorRoleData.INVITEE);
+        hangoutFolkData.setState(isOrganizer ?
+                HangoutParticipatorStateData.ACCEPTED :
+                HangoutParticipatorStateData.PENDING);
+        hangoutFolkData.setUpdateTime(dt);
+        return hangoutFolkData;
     }
 
     private HangoutInfo toHangoutInfo(Hangout hangOut, Participator organizer) {
