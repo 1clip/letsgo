@@ -34,7 +34,7 @@ public class HangoutServiceTest {
     private HangoutServer hangoutServer;
     private Random random;
 
-    @Test
+    // @Test
     public void TestHangoutFlow() throws TException{
         // post user u1
         User u1 = createUser();

@@ -2,6 +2,7 @@ package coffee.letsgo.hangout.server;
 
 import coffee.letsgo.common.Common;
 import coffee.letsgo.hangout.*;
+import coffee.letsgo.hangout.exception.DataFormatException;
 import coffee.letsgo.hangout.store.HangoutStore;
 import coffee.letsgo.hangout.store.HangoutStoreCassandraImpl;
 import coffee.letsgo.hangout.store.model.HangoutData;
@@ -12,6 +13,8 @@ import coffee.letsgo.identity.*;
 import coffee.letsgo.identity.client.IdentityClient;
 import com.facebook.swift.codec.ThriftField;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -24,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HangoutServiceImpl implements HangoutService {
     private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, UserHangoutInfo>> userHangOutsDB = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, HangoutInfo> hangOutsDB = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(HangoutServiceImpl.class);
 
 
     private static class HangoutStoreHolder {
@@ -46,20 +50,20 @@ public class HangoutServiceImpl implements HangoutService {
 
         verifyUser(userId);
         verifyParticipators(hangOut.getParticipators());
+        logger.debug("creating hangout for user %d", userId);
         long hangOutId = IceflakeClientHolder.Instance.getId(IdType.HANGOUT_ID);
+        logger.debug("new hangout id: %s", hangOutId);
         hangOut.setId(hangOutId);
 
         Participator organizer = new Participator();
         organizer.setId(userId);
         organizer.setRole(Role.ORGANIZER);
         organizer.setState(ParticipatorState.ACCEPT);
-
-        try {
-            HangoutData hangoutData = toHangoutData(hangOut, organizer);
-            HangoutStoreHolder.instance.setHangout(hangoutData);
-        } catch (ParseException ex) {
-
-        }
+        HangoutData hangoutData = toHangoutData(hangOut, userId);
+        Date now = new Date();
+        hangoutData.setCreatTime(now);
+        hangoutData.setUpdateTime(now);
+        HangoutStoreHolder.instance.setHangout(hangoutData);
         return hangOut;
     }
 
@@ -234,27 +238,32 @@ public class HangoutServiceImpl implements HangoutService {
         return IdentityClientHolder.instance.getUsers(ids);
     }
 
-    private HangoutData toHangoutData(Hangout hangout, Participator organizer) throws ParseException {
-        if (hangout == null || organizer == null) {
+    private HangoutData toHangoutData(Hangout hangout, long organizerId) {
+        if (hangout == null) {
             return null;
         }
         HangoutData hangoutData = new HangoutData();
-        hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
-        hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
-        hangoutData.setLocation(hangout.getLocation());
+        hangoutData.setHangoutId(hangout.getId());
+        hangoutData.setCreatorId(organizerId);
+        hangoutData.setActivity(hangout.getActivity());
         hangoutData.setSubject(hangout.getSubject());
+        hangoutData.setLocation(hangout.getLocation());
+        try {
+            hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
+            hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
+        } catch (ParseException ex) {
+            logger.error("failed to parse datetime", ex);
+            throw new DataFormatException("failed to parse hangout datetime", ex);
+        }
         Set<Long> participators = new HashSet<>();
         if (hangout.getParticipators() != null) {
             for (Participator participator : hangout.getParticipators()) {
-                if (participator.getId() != organizer.getId()) {
+                if (participator.getId() != organizerId) {
                     participators.add(participator.getId());
                 }
             }
         }
         hangoutData.setParticipators(participators);
-        Date now = new Date();
-        hangoutData.setCreatTime(now);
-        hangoutData.setUpdateTime(now);
         return hangoutData;
     }
 

@@ -25,7 +25,14 @@ struct User {
   10: optional i64 id
 }
 
+typedef map<i64, User> Users
+
+exception UserNotFoundException {
+  1: string message
+}
+
 service IdentityService {
   User create_user(1:User user)
   User get_user(1:i64 user_id)
+  Users get_users(1:set<i64> ids)
 }

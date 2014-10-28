@@ -5,11 +5,15 @@ import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;
 import coffee.letsgo.identity.IdentityService;
 import coffee.letsgo.identity.User;
+import com.facebook.swift.codec.ThriftField;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.thrift.TException;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -43,5 +47,15 @@ public class IdentityServiceImpl implements IdentityService {
     @Override
     public User getUser(long userId) throws TException {
         return usersDB.get(userId);
+    }
+
+    @Override
+    public Map<Long, User> getUsers(
+            @ThriftField(value = 1, name = "ids", requiredness = ThriftField.Requiredness.NONE) Set<Long> ids) throws TException {
+        Map<Long, User> userDict = new HashMap<>();
+        for(long id : ids) {
+            userDict.put(id, getUser(id));
+        }
+        return userDict;
     }
 }
