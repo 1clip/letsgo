@@ -2,21 +2,27 @@ package coffee.letsgo.hangout.store;
 
 import coffee.letsgo.hangout.store.model.HangoutData;
 import coffee.letsgo.hangout.store.model.HangoutFolkData;
+import coffee.letsgo.hangout.store.model.HangoutParticipatorRoleData;
+import coffee.letsgo.hangout.store.model.HangoutParticipatorStateData;
 import coffee.letsgo.storeland.CassandraSessionBuilder;
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.BatchStatement;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
@@ -33,10 +39,10 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     private final Mapper<HangoutFolkData> hangoutFolkMapper =
             new MappingManager(session).mapper(HangoutFolkData.class);
 
-    private final ListeningExecutorService executorPool =
-            MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10));
-
     private static final Function<Object, Void> NOOP = Functions.constant(null);
+
+    private final Executor executor = Executors.newFixedThreadPool(10);
+
     private static final Function<ResultSet, List<HangoutFolkData>> hangoutFolksFetcher =
             new Function<ResultSet, List<HangoutFolkData>>() {
                 @Override
@@ -77,21 +83,36 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     }
 
     @Override
-    public ListenableFuture<List<HangoutFolkData>> getHangoutFolks(long hangoutId) {
+    public ListenableFuture<Collection<HangoutFolkData>> getHangoutFolks(final long hangoutId) {
         final ListenableFuture<HangoutData> future = getHangout(hangoutId);
-        future.addListener(new Runnable() {
+        return Futures.transform(future, new Function<HangoutData, Collection<HangoutFolkData>>() {
             @Override
-            public void run() {
-                try {
-                    future.get();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                }
+            public Collection<HangoutFolkData> apply(HangoutData hangoutData) {
+                Set<Long> participatorIds = hangoutData.getParticipators();
+                participatorIds.add(hangoutData.getCreatorId());
+                Select.Where select = QueryBuilder.select()
+                        .all()
+                        .from(Constants.keyspace, Constants.hangoutFolkTableName)
+                        .where(QueryBuilder.in("user_id", participatorIds.toArray()))
+                        .and(QueryBuilder.eq("hangout_id", hangoutId));
+                ResultSet resultSet = session.execute(select);
+                return Lists.transform(
+                        resultSet.all(),
+                        new Function<Row, HangoutFolkData>() {
+                            @Override
+                            public HangoutFolkData apply(Row row) {
+                                HangoutFolkData hangoutFolkData = new HangoutFolkData();
+                                hangoutFolkData.setUserId(row.getLong("user_id"));
+                                hangoutFolkData.setHangoutId(row.getLong("hangout_id"));
+                                hangoutFolkData.setRole(HangoutParticipatorRoleData.valueOf(row.getString("role")));
+                                hangoutFolkData.setState(HangoutParticipatorStateData.valueOf(row.getString("state")));
+                                hangoutFolkData.setComment(row.getString("comment"));
+                                hangoutFolkData.setUpdateTime(row.getDate("update_time"));
+                                return hangoutFolkData;
+                            }
+                        });
             }
-        }, executorPool);
-        return null;
+        }, executor);
     }
 
     @Override
@@ -100,7 +121,7 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     }
 
     @Override
-    public ListenableFuture<List<HangoutData>> getHangouts(long userId) {
+    public ListenableFuture<Collection<HangoutData>> getHangouts(long userId) {
         return null;
     }
 }

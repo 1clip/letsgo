@@ -99,7 +99,7 @@ public class HangoutServiceTest {
 
     private void updateHangoutStatus(long userId, long hangoutId) throws TException {
         Participator p = new Participator();
-        p.setState(ParticipatorState.ACCEPT);
+        p.setState(ParticipatorState.ACCEPTED);
         p.setComment("i like it");
 
         List<Participator> participators = new ArrayList<>();

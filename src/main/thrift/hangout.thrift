@@ -15,8 +15,8 @@ enum HangoutState {
 
 enum ParticipatorState {
     PENDING = 0,
-    ACCEPT = 1,
-    REJECT = 2
+    ACCEPTED = 1,
+    REJECTED = 2
 }
 
 struct Participator {

@@ -20,9 +20,9 @@ public interface HangoutStore {
 
     ListenableFuture<HangoutData> getHangout(long hangoutId);
 
-    ListenableFuture<List<HangoutFolkData>> getHangoutFolks(long hangoutId);
+    ListenableFuture<Collection<HangoutFolkData>> getHangoutFolks(long hangoutId);
 
     ListenableFuture<HangoutFolkData> getHangoutFolk(long hangoutId, long userId);
 
-    ListenableFuture<List<HangoutData>> getHangouts(long userId);
+    ListenableFuture<Collection<HangoutData>> getHangouts(long userId);
 }

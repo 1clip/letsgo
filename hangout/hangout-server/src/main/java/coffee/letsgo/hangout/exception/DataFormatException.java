@@ -3,7 +3,7 @@ package coffee.letsgo.hangout.exception;
 /**
  * Created by xbwu on 10/27/14.
  */
-public class DataFormatException extends RuntimeException {
+public class DataFormatException extends HangoutRuntimeException {
     public DataFormatException() {
         super();
     }
