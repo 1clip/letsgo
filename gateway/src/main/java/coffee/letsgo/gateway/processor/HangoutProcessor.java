@@ -3,15 +3,14 @@ package coffee.letsgo.gateway.processor;
 import coffee.letsgo.gateway.exception.BadRequestException;
 import coffee.letsgo.hangout.Hangout;
 import coffee.letsgo.hangout.HangoutService;
+import coffee.letsgo.hangout.HangoutState;
 import coffee.letsgo.hangout.HangoutSummary;
-import coffee.letsgo.hangout.Participator;
 import coffee.letsgo.hangout.client.HangoutClient;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import org.apache.thrift.TException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -36,7 +35,7 @@ public class HangoutProcessor extends RequestProcessor {
                 return gson.toJson(getHangout(uid, hid));
             }
             if (stMatcher.matches()) {
-                String state = stMatcher.group(1);
+                HangoutState state = HangoutState.valueOf(stMatcher.group(1).toUpperCase());
                 return gson.toJson(getHangoutsByStatus(uid, state));
             }
             throw new BadRequestException("unsupported GET request uri: " + req.getUri());
@@ -65,7 +64,7 @@ public class HangoutProcessor extends RequestProcessor {
         return hangoutClient.getHangoutById(uid, hid);
     }
 
-    private List<HangoutSummary> getHangoutsByStatus(long uid, String state) throws TException {
+    private List<HangoutSummary> getHangoutsByStatus(long uid, HangoutState state) throws TException {
         return hangoutClient.getHangoutByStatus(uid, state);
     }
 

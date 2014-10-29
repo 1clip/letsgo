@@ -44,6 +44,9 @@ public class HangoutData {
     @Column(name = "participators")
     private Set<Long> participators;
 
+    @Column(name = "cancelled")
+    private boolean canceled;
+
     public Date getCreatTime() {
         return creatTime;
     }
@@ -122,6 +125,14 @@ public class HangoutData {
 
     public void setParticipators(Set<Long> participators) {
         this.participators = participators;
+    }
+
+    public boolean isCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(boolean canceled) {
+        this.canceled = canceled;
     }
 
     @Override

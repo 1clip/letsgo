@@ -9,8 +9,9 @@ enum Role {
 
 enum HangoutState {
     ACTIVE = 0,
-    OVERDUE = 1,
-    CANCELED = 2
+    HAPPENING = 1,
+    OVERDUE = 2,
+    CANCELED = 3
 }
 
 enum ParticipatorState {
@@ -77,6 +78,6 @@ struct UserHangoutInfo {
 service HangoutService {
     Hangout createHangout(1:i64 userId, 2:Hangout hangOut)
     Hangout getHangoutById(1:i64 userId, 2:i64 hangOutId)
-    list<HangoutSummary> getHangoutByStatus(1:i64 userId, 2:string status)
+    list<HangoutSummary> getHangoutByStatus(1:i64 userId, 2:HangoutState status)
     void updateHangoutStatus(1:i64 userId, 2:i64 hangOutId, 3:Hangout hangout)
 }

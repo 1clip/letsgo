@@ -5,22 +5,19 @@ import coffee.letsgo.hangout.store.model.HangoutFolkData;
 import coffee.letsgo.hangout.store.model.HangoutParticipatorRoleData;
 import coffee.letsgo.hangout.store.model.HangoutParticipatorStateData;
 import coffee.letsgo.storeland.CassandraSessionBuilder;
-import com.datastax.driver.core.BatchStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -39,24 +36,14 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     private final Mapper<HangoutFolkData> hangoutFolkMapper =
             new MappingManager(session).mapper(HangoutFolkData.class);
 
+    private final PreparedStatement getHangoutsByUserIdStatement =
+            session.prepare(String.format(
+                    "SELECT * FROM %s.%s WHERE user_id = ?;",
+                    Constants.keyspace, Constants.hangoutFolkTableName));
+
     private static final Function<Object, Void> NOOP = Functions.constant(null);
 
     private final Executor executor = Executors.newFixedThreadPool(10);
-
-    private static final Function<ResultSet, List<HangoutFolkData>> hangoutFolksFetcher =
-            new Function<ResultSet, List<HangoutFolkData>>() {
-                @Override
-                public List<HangoutFolkData> apply(ResultSet input) {
-                    return null;
-                }
-            };
-    private static final Function<ResultSet, List<HangoutData>> hangoutsFetcher =
-            new Function<ResultSet, List<HangoutData>>() {
-                @Override
-                public List<HangoutData> apply(ResultSet input) {
-                    return null;
-                }
-            };
 
     @Override
     public ListenableFuture<Void> setHangout(HangoutData hangoutData) {
@@ -84,8 +71,7 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
 
     @Override
     public ListenableFuture<Collection<HangoutFolkData>> getHangoutFolks(final long hangoutId) {
-        final ListenableFuture<HangoutData> future = getHangout(hangoutId);
-        return Futures.transform(future, new Function<HangoutData, Collection<HangoutFolkData>>() {
+        return Futures.transform(getHangout(hangoutId), new Function<HangoutData, Collection<HangoutFolkData>>() {
             @Override
             public Collection<HangoutFolkData> apply(HangoutData hangoutData) {
                 Set<Long> participatorIds = hangoutData.getParticipators();
@@ -122,6 +108,21 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
 
     @Override
     public ListenableFuture<Collection<HangoutData>> getHangouts(long userId) {
-        return null;
+        return Futures.transform(
+                session.executeAsync(getHangoutsByUserIdStatement.bind(userId)),
+                new Function<ResultSet, Collection<HangoutData>>() {
+                    @Override
+                    public Collection<HangoutData> apply(ResultSet resultSet) {
+                        return Collections2.transform(
+                                resultSet.all(),
+                                new Function<Row, HangoutData>() {
+                                    @Override
+                                    public HangoutData apply(Row row) {
+                                        return hangoutMapper.get(row.getLong("hangout_id"));
+                                    }
+                                }
+                        );
+                    }
+                });
     }
 }

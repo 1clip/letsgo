@@ -19,6 +19,7 @@ import coffee.letsgo.identity.User;
 import coffee.letsgo.identity.client.IdentityClient;
 import com.facebook.swift.codec.ThriftField;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -57,7 +58,6 @@ public class HangoutServiceImpl implements HangoutService {
             @ThriftField(value = 2, name = "hangOut", requiredness = ThriftField.Requiredness.NONE) Hangout hangOut)
             throws TException {
 
-        verifyUser(userId);
         verifyParticipators(hangOut.getParticipators());
         logger.debug("creating hangout for user %d", userId);
         long hangOutId = IceflakeClientHolder.Instance.getId(IdType.HANGOUT_ID);
@@ -79,7 +79,6 @@ public class HangoutServiceImpl implements HangoutService {
             @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId)
             throws TException {
 
-        verifyUser(userId);
         HangoutData hangoutData;
         try {
             hangoutData = HangoutStoreHolder.instance.getHangout(hangOutId).get();
@@ -102,58 +101,68 @@ public class HangoutServiceImpl implements HangoutService {
     }
 
     @Override
-    public List<HangoutSummary> getHangoutByStatus(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "status", requiredness = ThriftField.Requiredness.NONE) String status) throws TException {
-        User userInfo = IdentityClientHolder.instance.getUser(userId);
-        if (userInfo == null) {
-            return null;
-        }
-        HangoutState hangoutState;
-        try {
-            hangoutState = HangoutState.valueOf(status.toUpperCase());
-        } catch (Exception ex) {
-            return null;
-        }
+    public List<HangoutSummary> getHangoutByStatus(
+            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
+            @ThriftField(value = 2, name = "status", requiredness = ThriftField.Requiredness.NONE) final HangoutState status)
+            throws TException {
 
-        ConcurrentHashMap<Long, UserHangoutInfo> uhs = userHangOutsDB.get(userId);
-        List<HangoutSummary> hangoutSummaries = new ArrayList<>();
-        if (uhs != null) {
-            for (Map.Entry<Long, UserHangoutInfo> kvp : uhs.entrySet()) {
-                Long hangOutId = kvp.getKey();
-                HangoutInfo hangOutInfo = hangOutsDB.get(hangOutId);
-                if (hangOutInfo == null) {
-                    return null;
-                }
-                if (hangOutInfo.getState() == hangoutState) {
-                    HangoutSummary hangOutSummary = new HangoutSummary();
-                    hangOutSummary.setId(hangOutId);
-                    hangOutSummary.setSubject(hangOutInfo.getSubject());
-                    hangOutSummary.setActivity(hangOutInfo.getActivity());
-                    hangOutSummary.setState(hangoutState);
-                    hangOutSummary.setNumPending(hangOutInfo.getNumPending());
-                    hangOutSummary.setNumAccepted(hangOutInfo.getNumAccepted());
-                    hangOutSummary.setNumRejected(hangOutInfo.getNumRejected());
-
-                    userInfo = IdentityClientHolder.instance.getUser(hangOutInfo.getOrganizerId());
-                    if (userInfo == null) {
-                        return null;
+        Collection<HangoutData> hangouts = Collections2.filter(
+                getHangouts(userId),
+                new Predicate<HangoutData>() {
+                    @Override
+                    public boolean apply(@NotNull HangoutData hangoutData) {
+                        return getHangoutState(hangoutData) == status;
                     }
-                    Participator organizer = new Participator();
-                    organizer.setId(hangOutInfo.getOrganizerId());
-                    organizer.setLoginName(userInfo.getLoginName());
-                    organizer.setFriendlyName(userInfo.getFriendlyName());
-                    organizer.setAvatarInfo(userInfo.getAvatarInfo());
-                    hangOutSummary.setOrganizer(organizer);
-
-                    hangoutSummaries.add(hangOutSummary);
+                }
+        );
+        List<HangoutSummary> hangoutSummaries = new ArrayList<>();
+        for (HangoutData hangoutData : hangouts) {
+            List<Participator> participators = getParticipators(hangoutData);
+            Participator organizer = null;
+            int numAccepted = 0, numPending = 0, numRejected = 0;
+            for (Participator participator : participators) {
+                switch (participator.getState()) {
+                    case ACCEPTED:
+                        ++numAccepted;
+                        break;
+                    case PENDING:
+                        ++numPending;
+                        break;
+                    case REJECTED:
+                        ++numRejected;
+                        break;
+                    default:
+                        logger.error("unrecognized participator state {}", participator.getState().name());
+                }
+                if (participator.getId() == hangoutData.getCreatorId()) {
+                    organizer = participator;
                 }
             }
-            return hangoutSummaries;
+            if (organizer == null) {
+                throw new HangoutInternalException(String.format(
+                        "failed to get organizer for hangout id %d", hangoutData.getHangoutId()));
+            }
+            HangoutSummary hangoutSummary = new HangoutSummary();
+            hangoutSummary.setId(hangoutData.getHangoutId());
+            hangoutSummary.setActivity(hangoutData.getActivity());
+            hangoutSummary.setSubject(hangoutData.getSubject());
+            hangoutSummary.setOrganizer(organizer);
+            hangoutSummary.setState(getHangoutState(hangoutData));
+            hangoutSummary.setNumAccepted(numAccepted);
+            hangoutSummary.setNumPending(numPending);
+            hangoutSummary.setNumRejected(numRejected);
+            hangoutSummaries.add(hangoutSummary);
         }
-        return null;
+        return hangoutSummaries;
     }
 
     @Override
-    public void updateHangoutStatus(@ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId, @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId, @ThriftField(value = 3, name = "participators", requiredness = ThriftField.Requiredness.NONE) Hangout hangout) throws TException {
+    public void updateHangoutStatus(
+            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
+            @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId,
+            @ThriftField(value = 3, name = "participators", requiredness = ThriftField.Requiredness.NONE) Hangout hangout)
+            throws TException {
+
         List<Participator> participators = hangout.getParticipators();
         if (participators == null || participators.size() < 1) {
             return;
@@ -297,8 +306,6 @@ public class HangoutServiceImpl implements HangoutService {
     }
 
     private Hangout composeHangout(HangoutData hangoutData) throws TException {
-        Collection<HangoutFolkData> hangoutFolkDataSet = getHangoutFolks(hangoutData.getHangoutId());
-        final Map<Long, User> usersDict = getUsersDict(hangoutData);
 
         Hangout hangout = new Hangout();
         hangout.setId(hangoutData.getHangoutId());
@@ -307,8 +314,14 @@ public class HangoutServiceImpl implements HangoutService {
         hangout.setLocation(hangoutData.getLocation());
         hangout.setStartTime(Common.simpleDateFormat.format(hangoutData.getStartTime()));
         hangout.setEndTime(Common.simpleDateFormat.format(hangoutData.getEndTime()));
-        // FIXME: set hangout state!!!
-        hangout.setState(HangoutState.ACTIVE);
+        hangout.setState(getHangoutState(hangoutData));
+        hangout.setParticipators(getParticipators(hangoutData));
+        return hangout;
+    }
+
+    private List<Participator> getParticipators(HangoutData hangoutData) throws TException {
+        final Collection<HangoutFolkData> hangoutFolkDataSet = getHangoutFolks(hangoutData.getHangoutId());
+        final Map<Long, User> usersDict = getUsersDict(hangoutData);
         List<Participator> participators = new ArrayList<>(Collections2.transform(
                 hangoutFolkDataSet,
                 new Function<HangoutFolkData, Participator>() {
@@ -328,8 +341,21 @@ public class HangoutServiceImpl implements HangoutService {
                     }
                 }
         ));
-        hangout.setParticipators(participators);
-        return hangout;
+        return participators;
+    }
+
+    private HangoutState getHangoutState(HangoutData hangoutData) {
+        if (hangoutData.isCanceled()) {
+            return HangoutState.CANCELED;
+        }
+        Date now = new Date();
+        if (hangoutData.getEndTime().before(now)) {
+            return HangoutState.OVERDUE;
+        }
+        if (hangoutData.getStartTime().after(now)) {
+            return HangoutState.ACTIVE;
+        }
+        return HangoutState.HAPPENING;
     }
 
     private Collection<HangoutFolkData> getHangoutFolks(long hangoutId) {
@@ -346,6 +372,22 @@ public class HangoutServiceImpl implements HangoutService {
             throw new HangoutInternalException(msg, ex);
         }
         return hangoutFolks;
+    }
+
+    private Collection<HangoutData> getHangouts(long userId) {
+        Collection<HangoutData> hangouts;
+        try {
+            hangouts = HangoutStoreHolder.instance.getHangouts(userId).get();
+        } catch (InterruptedException ex) {
+            String msg = String.format("interrupted getting hangouts for user %d", userId);
+            logger.error(msg, ex);
+            throw new HangoutInternalException(msg, ex);
+        } catch (ExecutionException ex) {
+            String msg = String.format("execution failure getting hangouts for user %d", userId);
+            logger.error(msg, ex);
+            throw new HangoutInternalException(msg, ex);
+        }
+        return hangouts;
     }
 
     private Map<Long, User> getUsersDict(HangoutData hangoutData) throws TException {

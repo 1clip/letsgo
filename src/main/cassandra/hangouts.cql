@@ -8,5 +8,6 @@ CREATE TABLE letsgo.hangouts (
     end_time timestamp,
     create_time timestamp,
     update_time timestamp,
-    participators set <bigint>
+    participators set <bigint>,
+    cancelled boolean
 );

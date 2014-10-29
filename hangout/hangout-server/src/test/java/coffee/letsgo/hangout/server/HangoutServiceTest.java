@@ -94,7 +94,7 @@ public class HangoutServiceTest {
     }
 
     private List<HangoutSummary> getHangoutByStatus(long userId, HangoutState hangoutState) throws TException {
-        return HangoutClient.getInstance().getHangoutByStatus(userId, hangoutState.name());
+        return HangoutClient.getInstance().getHangoutByStatus(userId, hangoutState);
     }
 
     private void updateHangoutStatus(long userId, long hangoutId) throws TException {
