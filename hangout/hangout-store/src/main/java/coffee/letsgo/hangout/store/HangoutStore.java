@@ -22,7 +22,7 @@ public interface HangoutStore {
 
     ListenableFuture<Collection<HangoutFolkData>> getHangoutFolks(long hangoutId);
 
-    ListenableFuture<HangoutFolkData> getHangoutFolk(long hangoutId, long userId);
+    ListenableFuture<HangoutFolkData> getHangoutFolk(long userId, long hangout_id);
 
     ListenableFuture<Collection<HangoutData>> getHangouts(long userId);
 }
