@@ -12,16 +12,18 @@ import coffee.letsgo.identity.User;
 import coffee.letsgo.identity.client.IdentityClient;
 import coffee.letsgo.identity.server.IdentityServer;
 import org.apache.thrift.TException;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import static com.google.common.base.Verify.*;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Random;
+
+import static com.google.common.base.Verify.verify;
+import static com.google.common.base.Verify.verifyNotNull;
 
 /**
  * Created by yfang on 10/6/14.
@@ -34,42 +36,56 @@ public class HangoutServiceTest {
     private HangoutServer hangoutServer;
     private Random random;
 
-    // @Test
-    public void TestHangoutFlow() throws TException{
+    @Test
+    public void TestHangoutFlow() throws TException {
         // post user u1
         User u1 = createUser();
-        verifyNotNull(u1.getId());
+        Assert.assertNotNull(u1.getId());
 
         // post user u2
         User u2 = createUser();
-        verifyNotNull(u2.getId());
+        Assert.assertNotNull(u2.getId());
 
         // post hangout
         Hangout hangout = createHangout(u1.getId(), u2.getId());
-        verify(hangout != null && hangout.getId() != null);
+        Assert.assertNotNull(hangout);
+        Assert.assertNotNull(hangout.getId());
 
         // get hangout by id
         Hangout hangout1 = getHangoutById(u1.getId(), hangout.getId());
         Hangout hangout2 = getHangoutById(u2.getId(), hangout.getId());
-        verify(hangout1 != null && hangout2 != null);
+        Assert.assertNotNull(hangout1);
+        Assert.assertNotNull(hangout2);
 
         // get hangout summary by status
         List<HangoutSummary> hangoutSummaries = getHangoutByStatus(u1.getId(), HangoutState.ACTIVE);
-        verify(hangoutSummaries != null && hangoutSummaries.size() == 1 && hangoutSummaries.get(0).getNumAccepted() == 0);
+        Assert.assertNotNull(hangoutSummaries);
+        Assert.assertEquals(hangoutSummaries.size(), 1);
+        HangoutSummary hangoutSummary = hangoutSummaries.get(0);
+        Assert.assertEquals(hangoutSummary.getNumAccepted(), 1);
+        Assert.assertEquals(hangoutSummary.getNumPending(), 1);
+        Assert.assertEquals(hangoutSummary.getNumRejected(), 0);
 
         // patch hangout status
         updateHangoutStatus(u2.getId(), hangout.getId());
 
         // get hangout summary by status again
         hangoutSummaries = getHangoutByStatus(u1.getId(), HangoutState.ACTIVE);
-        verify(hangoutSummaries != null && hangoutSummaries.size() == 1 && hangoutSummaries.get(0).getNumAccepted() == 1);
+        Assert.assertNotNull(hangoutSummaries);
+        Assert.assertEquals(hangoutSummaries.size(), 1);
+        hangoutSummary = hangoutSummaries.get(0);
+        Assert.assertEquals(hangoutSummary.getNumAccepted(), 2);
+        Assert.assertEquals(hangoutSummary.getNumPending(), 0);
+        Assert.assertEquals(hangoutSummary.getNumRejected(), 0);
 
         Hangout hangout_new = createHangout(u2.getId(), u1.getId());
-        verify(hangout_new != null && hangout_new.getId() != null);
+        Assert.assertNotNull(hangout_new);
+        Assert.assertNotNull(hangout_new.getId());
 
         // get hangout summary by status
         hangoutSummaries = getHangoutByStatus(u2.getId(), HangoutState.ACTIVE);
-        verify(hangoutSummaries != null && hangoutSummaries.size() == 2);
+        Assert.assertNotNull(hangoutSummaries);
+        Assert.assertEquals(hangoutSummaries.size(), 2);
     }
 
     private Hangout createHangout(long organizerId, long... userIds) throws TException {
@@ -77,7 +93,8 @@ public class HangoutServiceTest {
         hangout.setActivity("Dinning");
         hangout.setSubject("birthday");
         hangout.setLocation("zixing rd");
-        hangout.setStartTime(new Date().toString());
+        hangout.setStartTime("2014-12-12T09:00:00.000+0800");
+        hangout.setEndTime("2014-12-12T12:00:00.000+0800");
         hangout.setParticipators(new ArrayList<Participator>());
         if (userIds != null && userIds.length > 0) {
             for (long userId : userIds) {
