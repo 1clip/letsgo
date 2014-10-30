@@ -102,8 +102,8 @@ public class HangoutStoreCassandraImpl implements HangoutStore {
     }
 
     @Override
-    public ListenableFuture<HangoutFolkData> getHangoutFolk(long hangoutId, long userId) {
-        return hangoutFolkMapper.getAsync(hangoutId, userId);
+    public ListenableFuture<HangoutFolkData> getHangoutFolk(long userId, long hangoutId) {
+        return hangoutFolkMapper.getAsync(userId, hangoutId);
     }
 
     @Override
