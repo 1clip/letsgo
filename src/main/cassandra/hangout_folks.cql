@@ -1,4 +1,4 @@
-create table hangout_folks (
+create table letsgo.hangout_folks (
     user_id bigint,
     hangout_id bigint,
     role varchar,
