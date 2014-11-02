@@ -73,6 +73,6 @@ public class HangoutProcessor extends RequestProcessor {
     }
 
     private void updateHangout(long uid, long hid, Hangout hangout) throws TException {
-        hangoutClient.updateHangoutStatus(uid, hid, hangout);
+        hangoutClient.updateHangout(uid, hid, hangout);
     }
 }

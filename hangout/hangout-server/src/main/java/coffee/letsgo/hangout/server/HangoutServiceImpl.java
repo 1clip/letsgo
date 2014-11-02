@@ -29,15 +29,12 @@ import org.slf4j.LoggerFactory;
 import javax.validation.constraints.NotNull;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Created by yfang on 10/4/14.
  */
 public class HangoutServiceImpl implements HangoutService {
-    private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, UserHangoutInfo>> userHangOutsDB = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, HangoutInfo> hangOutsDB = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(HangoutServiceImpl.class);
 
 
@@ -158,11 +155,12 @@ public class HangoutServiceImpl implements HangoutService {
     }
 
     @Override
-    public void updateHangoutStatus(
+    public void updateHangout(
             @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
             @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId,
             @ThriftField(value = 3, name = "participators", requiredness = ThriftField.Requiredness.NONE) Hangout hangout)
             throws TException {
+
         HangoutFolkData hangoutFolkData = getHangoutFolk(hangOutId, userId);
         if(hangoutFolkData == null) {
             throw new HangoutNotFoundException(String.format(

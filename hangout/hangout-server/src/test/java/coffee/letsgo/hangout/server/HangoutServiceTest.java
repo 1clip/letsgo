@@ -22,9 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static com.google.common.base.Verify.verify;
-import static com.google.common.base.Verify.verifyNotNull;
-
 /**
  * Created by yfang on 10/6/14.
  */
@@ -123,7 +120,7 @@ public class HangoutServiceTest {
         participators.add(p);
         Hangout hangout = new Hangout();
         hangout.setParticipators(participators);
-        HangoutClient.getInstance().updateHangoutStatus(userId, hangoutId, hangout);
+        HangoutClient.getInstance().updateHangout(userId, hangoutId, hangout);
     }
 
     private User createUser() throws TException {
