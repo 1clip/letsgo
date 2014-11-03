@@ -16,10 +16,10 @@ import java.util.Date;
 public class UserData {
     @PartitionKey
     @Column(name = "user_id")
-    private long user_id;
+    private long userId;
 
     @Column(name = "avatar_id")
-    private String avatarId;
+    private long avatarId;
 
     @Column(name = "login_name")
     private String loginName;
@@ -52,4 +52,102 @@ public class UserData {
 
     @Column(name = "update_time")
     private Date updateTime;
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
+        this.userId = userId;
+    }
+
+    public long getAvatarId() {
+        return avatarId;
+    }
+
+    public void setAvatarId(long avatarId) {
+        this.avatarId = avatarId;
+    }
+
+    public String getLoginName() {
+        return loginName;
+    }
+
+    public void setLoginName(String loginName) {
+        this.loginName = loginName;
+    }
+
+    public String getFriendlyName() {
+        return friendlyName;
+    }
+
+    public void setFriendlyName(String friendlyName) {
+        this.friendlyName = friendlyName;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public Date getDob() {
+        return dob;
+    }
+
+    public void setDob(Date dob) {
+        this.dob = dob;
+    }
+
+    public String getCellPhone() {
+        return cellPhone;
+    }
+
+    public void setCellPhone(String cellPhone) {
+        this.cellPhone = cellPhone;
+    }
+
+    public SignupType getSignupType() {
+        return signupType;
+    }
+
+    public void setSignupType(SignupType signupType) {
+        this.signupType = signupType;
+    }
+
+    public String getSignupToken() {
+        return signupToken;
+    }
+
+    public void setSignupToken(String signupToken) {
+        this.signupToken = signupToken;
+    }
+
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
+
+
 }

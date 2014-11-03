@@ -6,11 +6,11 @@ import coffee.letsgo.hangout.client.HangoutClient;
 import coffee.letsgo.iceflake.client.IceflakeClientException;
 import coffee.letsgo.iceflake.config.IceflakeConfigException;
 import coffee.letsgo.iceflake.server.IceflakeServer;
-import coffee.letsgo.identity.Gender;
-import coffee.letsgo.identity.SignupType;
 import coffee.letsgo.identity.User;
 import coffee.letsgo.identity.client.IdentityClient;
 import coffee.letsgo.identity.server.IdentityServer;
+import coffee.letsgo.identity.store.model.Gender;
+import coffee.letsgo.identity.store.model.SignupType;
 import org.apache.thrift.TException;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -21,9 +21,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import static com.google.common.base.Verify.verify;
-import static com.google.common.base.Verify.verifyNotNull;
 
 /**
  * Created by yfang on 10/6/14.
@@ -130,10 +127,10 @@ public class HangoutServiceTest {
         User user = new User();
         user.setLoginName("u" + random.nextLong());
         user.setFriendlyName("uf" + random.nextLong());
-        user.setGender(Gender.MALE);
+        user.setGender(Gender.MALE.name());
         user.setDateOfBirth("1985-01-01");
         user.setCellPhone(String.valueOf(random.nextLong()));
-        user.setSignUpType(SignupType.CELL_PHONE);
+        user.setSignUpType(SignupType.CELLPHONE.name());
 
         AvatarInfo avatarInfo = new AvatarInfo();
         avatarInfo.setAvatarId(random.nextLong());

@@ -29,15 +29,12 @@ import org.slf4j.LoggerFactory;
 import javax.validation.constraints.NotNull;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Created by yfang on 10/4/14.
  */
 public class HangoutServiceImpl implements HangoutService {
-    private final ConcurrentHashMap<Long, ConcurrentHashMap<Long, UserHangoutInfo>> userHangOutsDB = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, HangoutInfo> hangOutsDB = new ConcurrentHashMap<>();
     private static final Logger logger = LoggerFactory.getLogger(HangoutServiceImpl.class);
 
 
@@ -213,8 +210,8 @@ public class HangoutServiceImpl implements HangoutService {
         hangoutData.setSubject(hangout.getSubject());
         hangoutData.setLocation(hangout.getLocation());
         try {
-            hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
-            hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
+            hangoutData.setStartTime(Common.simpleDateTimeFormat.parse(hangout.getStartTime()));
+            hangoutData.setEndTime(Common.simpleDateTimeFormat.parse(hangout.getEndTime()));
         } catch (ParseException ex) {
             logger.error("failed to parse datetime", ex);
             throw new DataFormatException("failed to parse hangout datetime", ex);
@@ -275,8 +272,8 @@ public class HangoutServiceImpl implements HangoutService {
         hangout.setActivity(hangoutData.getActivity());
         hangout.setSubject(hangoutData.getSubject());
         hangout.setLocation(hangoutData.getLocation());
-        hangout.setStartTime(Common.simpleDateFormat.format(hangoutData.getStartTime()));
-        hangout.setEndTime(Common.simpleDateFormat.format(hangoutData.getEndTime()));
+        hangout.setStartTime(Common.simpleDateTimeFormat.format(hangoutData.getStartTime()));
+        hangout.setEndTime(Common.simpleDateTimeFormat.format(hangoutData.getEndTime()));
         hangout.setState(getHangoutState(hangoutData));
         hangout.setParticipators(getParticipators(hangoutData));
         return hangout;
