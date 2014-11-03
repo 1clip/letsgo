@@ -3,21 +3,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>letsgo-parent</artifactId>
+        <artifactId>letsgo-coffee</artifactId>
         <groupId>coffee.letsgo</groupId>
         <version>0.0.1-SNAPSHOT</version>
-        <relativePath>../parent</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>coffee.letsgo.columbus</groupId>
-    <artifactId>columbus</artifactId>
+    <artifactId>letsgo-parent</artifactId>
     <packaging>pom</packaging>
-    <modules>
-        <module>columbus-service</module>
-        <module>columbus-server</module>
-        <module>columbus-client</module>
-        <module>server-swift</module>
-        <module>client-swift</module>
-    </modules>
 
+    <properties>
+        <dep.guava.version>18.0</dep.guava.version>
+        <dep.guice.version>3.0</dep.guice.version>
+        <dep.swift.version>0.13.2</dep.swift.version>
+        <dep.self4j.version>1.7.7</dep.self4j.version>
+        <dep.testng.version>6.8.8</dep.testng.version>
+    </properties>
 </project>
