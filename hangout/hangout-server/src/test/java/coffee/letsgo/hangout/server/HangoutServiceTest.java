@@ -120,7 +120,7 @@ public class HangoutServiceTest {
         participators.add(p);
         Hangout hangout = new Hangout();
         hangout.setParticipators(participators);
-        HangoutClient.getInstance().updateHangoutStatus(userId, hangoutId, hangout);
+        HangoutClient.getInstance().updateHangout(userId, hangoutId, hangout);
     }
 
     private User createUser() throws TException {
