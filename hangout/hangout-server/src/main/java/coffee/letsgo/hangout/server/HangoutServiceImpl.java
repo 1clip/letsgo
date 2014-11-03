@@ -25,6 +25,7 @@ import com.google.common.collect.Collections2;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.validation.constraints.NotNull;
 import java.text.ParseException;
@@ -36,7 +37,6 @@ import java.util.concurrent.ExecutionException;
  */
 public class HangoutServiceImpl implements HangoutService {
     private static final Logger logger = LoggerFactory.getLogger(HangoutServiceImpl.class);
-
 
     private static class HangoutStoreHolder {
         private static final HangoutStore instance = new HangoutStoreCassandraImpl();
@@ -162,22 +162,72 @@ public class HangoutServiceImpl implements HangoutService {
             throws TException {
 
         HangoutFolkData hangoutFolkData = getHangoutFolk(hangOutId, userId);
-        if(hangoutFolkData == null) {
+        if (hangoutFolkData == null) {
             throw new HangoutNotFoundException(String.format(
                     "hangout %d not found for user %d",
                     hangOutId, userId));
         }
-        if(hangout.getParticipators() == null || hangout.getParticipators().size() != 1) {
+        if (hangout.getParticipators() == null || hangout.getParticipators().size() != 1) {
             throw new BadRequestException("exactly 1 participator required");
         }
         Participator participator = hangout.getParticipators().get(0);
         hangoutFolkData.setState(HangoutParticipatorStateData.valueOf(participator.getState().name()));
         hangoutFolkData.setComment(participator.getComment());
-        if(hangoutFolkData.getRole() == HangoutParticipatorRoleData.ORGANIZER &&
+        if (hangoutFolkData.getRole() == HangoutParticipatorRoleData.ORGANIZER &&
                 hangoutFolkData.getState() != HangoutParticipatorStateData.ACCEPTED) {
             throw new BadRequestException("organizer could not change status to any other then ACCEPTED");
         }
         HangoutStoreHolder.instance.setHangoutFolk(hangoutFolkData);
+        if (hangoutFolkData.getRole() != HangoutParticipatorRoleData.ORGANIZER) {
+            return;
+        }
+        if (hangout.getActivity() == null ||
+                hangout.getSubject() == null ||
+                hangout.getLocation() == null ||
+                hangout.getStartTime() == null ||
+                hangout.getEndTime() == null ||
+                hangout.getState() == null) {
+
+            logger.debug("start updating hangout info of {} by user {}", hangOutId, userId);
+            HangoutData hangoutData = getHangout(hangOutId);
+            if (hangout.getActivity() != null) {
+                hangoutData.setActivity(hangout.getActivity());
+            }
+            if (hangout.getSubject() != null) {
+                hangoutData.setSubject(hangout.getSubject());
+            }
+            if (hangout.getLocation() != null) {
+                hangoutData.setLocation(hangout.getLocation());
+            }
+            if (hangout.getStartTime() != null) {
+                try {
+                    hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
+                } catch (ParseException ex) {
+                    throw new BadRequestException(String.format(
+                            "unsupported format of start_time %s", hangout.getStartTime()), ex);
+                }
+            }
+            if (hangout.getEndTime() != null) {
+                try {
+                    hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
+                } catch (ParseException ex) {
+                    throw new BadRequestException(String.format(
+                            "unsupported format of end_time %s", hangout.getEndTime()), ex);
+                }
+            }
+            if (hangout.getState() != null) {
+                if (hangout.getState() == HangoutState.CANCELED) {
+                    hangoutData.setCanceled(true);
+                } else {
+                    logger.info("ignore updating state of hangout {} to {}", hangOutId, hangout.getState().name());
+                }
+            }
+            HangoutStoreHolder.instance.setHangout(hangoutData);
+        }
+        if(hangout.getParticipators() != null) {
+            //TODO: atomically update participators
+            throw new NotImplementedException();
+        }
     }
 
     private User verifyUser(long userId) throws TException {
