@@ -136,7 +136,7 @@ public class IdentityServiceImpl implements IdentityService {
         user.setLocale(userData.getLocale());
         user.setLoginName(userData.getLoginName());
         user.setCellPhone(userData.getCellPhone());
-        user.setDateOfBirth(userData.getDob().toString());
+        user.setDateOfBirth(Common.simpleDateFormat.format(userData.getDob()));
         user.setFriendlyName(userData.getFriendlyName());
         user.setGender(userData.getGender().name());
         user.setSignUpType(userData.getSignupType().name());

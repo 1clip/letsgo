@@ -22,7 +22,7 @@ exception UserNotFoundException {
 }
 
 service IdentityService {
-  User create_user(1:User user)
-  User get_user(1:i64 user_id)
-  Users get_users(1:set<i64> ids)
+  User create_user(1: required User user)
+  User get_user(1: required i64 user_id)
+  Users get_users(1: required set<i64> ids)
 }

@@ -76,8 +76,8 @@ struct UserHangoutInfo {
 }
 
 service HangoutService {
-    Hangout createHangout(1:i64 userId, 2:Hangout hangOut)
-    Hangout getHangoutById(1:i64 userId, 2:i64 hangOutId)
-    list<HangoutSummary> getHangoutByStatus(1:i64 userId, 2:HangoutState status)
-    void updateHangout(1:i64 userId, 2:i64 hangOutId, 3:Hangout hangout)
+    Hangout createHangout(1: required i64 userId, 2: required Hangout hangOut)
+    Hangout getHangoutById(1: required i64 userId, 2: required i64 hangOutId)
+    list<HangoutSummary> getHangoutByStatus(1:required i64 userId, 2: required HangoutState status)
+    void updateHangout(1: required i64 userId, 2: required i64 hangOutId, 3: required Hangout hangout)
 }

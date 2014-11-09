@@ -33,7 +33,7 @@ public class HangoutServiceTest {
     private HangoutServer hangoutServer;
     private Random random;
 
-    @Test
+    //@Test
     public void TestHangoutFlow() throws TException {
         // post user u1
         User u1 = createUser();
@@ -134,7 +134,7 @@ public class HangoutServiceTest {
 
         AvatarInfo avatarInfo = new AvatarInfo();
         avatarInfo.setAvatarId(random.nextLong());
-        avatarInfo.setAvatarToken(random.nextLong());
+        avatarInfo.setOwnerId(random.nextLong());
         user.setAvatarInfo(avatarInfo);
         return IdentityClient.getInstance().createUser(user);
     }

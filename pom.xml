@@ -23,5 +23,6 @@
         <module>gateway</module>
         <module>service-starter</module>
         <module>storeland</module>
+        <module>avatar</module>
     </modules>
 </project>
