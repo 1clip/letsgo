@@ -75,9 +75,37 @@ struct UserHangoutInfo {
    5: i64 user_id
 }
 
+exception InvalidHangoutDataException {
+  1: string msg
+}
+
+exception HangoutProcessException {
+  1: string msg
+}
+
+exception HangoutNotFoundException {
+  1: string msg
+}
+
 service HangoutService {
     Hangout createHangout(1: required i64 userId, 2: required Hangout hangOut)
+        throws (
+            1: InvalidHangoutDataException ihde,
+            2: HangoutProcessException hpe
+        )
     Hangout getHangoutById(1: required i64 userId, 2: required i64 hangOutId)
+        throws (
+            1: HangoutNotFoundException hnfe,
+            2: HangoutProcessException hpe
+        )
     list<HangoutSummary> getHangoutByStatus(1:required i64 userId, 2: required HangoutState status)
+        throws (
+            1: HangoutProcessException hpe
+        )
     void updateHangout(1: required i64 userId, 2: required i64 hangOutId, 3: required Hangout hangout)
+        throws (
+            1: InvalidHangoutDataException ihde,
+            2: HangoutNotFoundException hnfe,
+            3: HangoutProcessException hpe
+        )
 }
