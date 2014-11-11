@@ -5,7 +5,15 @@ struct AvatarInfo {
   2: i64 owner_id
 }
 
+exception AvatarNotFoundException {
+  1: string msg
+}
+
+exception NotSupportedFormatException {
+  1: string msg
+}
+
 service Avatar {
-  AvatarInfo put(1: required binary img)
-  binary get(1: required AvatarInfo info)
+  AvatarInfo put(1: required binary img) throws( 1: NotSupportedFormatException nsfe )
+  binary get(1: required AvatarInfo info) throws( 1: AvatarNotFoundException anfe )
 }
