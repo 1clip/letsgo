@@ -4,8 +4,7 @@ import coffee.letsgo.common.Common;
 import coffee.letsgo.iceflake.Iceflake;
 import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;
-import coffee.letsgo.identity.IdentityService;
-import coffee.letsgo.identity.User;
+import coffee.letsgo.identity.*;
 import coffee.letsgo.identity.server.exception.BadRequestException;
 import coffee.letsgo.identity.server.exception.IdentityInternalException;
 import coffee.letsgo.identity.store.IdentityStore;
@@ -48,12 +47,16 @@ public class IdentityServiceImpl implements IdentityService {
     }
 
     @Override
-    public User createUser(User newUser) throws TException {
+    public User createUser(User newUser)
+            throws InvalidUserDataException, UserProcessException, TException {
         User user = new User();
         try {
             BeanUtils.copyProperties(user, newUser);
         } catch (Exception ex) {
-            throw new TException("failed to clone user");
+            logger.error("failed to clone user", ex);
+            UserProcessException userProcessException = new UserProcessException();
+            userProcessException.setMsg(String.format("not able to clone user, detailed exception %s", ex));
+            throw userProcessException;
         }
         long id = IceflakeClientHolder.Instance.getId(IdType.ACCT_ID);
         user.setId(id);
@@ -61,35 +64,50 @@ public class IdentityServiceImpl implements IdentityService {
         UserData userData = toUserData(user);
         try {
             IdentityStoreHolder.instance.createUser(userData).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ex) {
+            String msg = String.format("interrupted creating user, %s", ex);
+            logger.error(msg);
+            UserProcessException userProcessException = new UserProcessException();
+            userProcessException.setMsg(msg);
+            throw userProcessException;
+        } catch (ExecutionException ex) {
+            String msg = String.format("execution failure creating user, %s", ex);
+            logger.error(msg);
+            UserProcessException userProcessException = new UserProcessException();
+            userProcessException.setMsg(msg);
+            throw userProcessException;
         }
         return user;
     }
 
     @Override
-    public User getUser(long userId) throws TException {
+    public User getUser(long userId)
+            throws UserNotFoundException, UserProcessException, TException {
+
         UserData userData;
         try {
             userData = IdentityStoreHolder.instance.getUser(userId).get();
         } catch (InterruptedException ex) {
             String msg = String.format("interrupted getting user data for id %d", userId);
             logger.error(msg, ex);
-            throw new IdentityInternalException(msg, ex);
+            UserProcessException userProcessException = new UserProcessException();
+            userProcessException.setMsg(msg);
+            throw userProcessException;
         } catch (ExecutionException ex) {
             String msg = String.format("execution failure getting user data for id %d", userId);
             logger.error(msg, ex);
-            throw new IdentityInternalException(msg, ex);
+            UserProcessException userProcessException = new UserProcessException();
+            userProcessException.setMsg(msg);
+            throw userProcessException;
         }
 
         return toUser(userData);
     }
 
     @Override
-    public Map<Long, User> getUsers(
-            @ThriftField(value = 1, name = "ids", requiredness = ThriftField.Requiredness.NONE) Set<Long> ids) throws TException {
+    public Map<Long, User> getUsers(Set<Long> ids)
+            throws UserNotFoundException, UserProcessException, TException {
+
         Map<Long, User> userDict = new HashMap<>();
         for (long id : ids) {
             userDict.put(id, getUser(id));
@@ -105,7 +123,7 @@ public class IdentityServiceImpl implements IdentityService {
         try {
             UserData userData = new UserData();
             userData.setUserId(user.getId());
-            userData.setAvatarId(user.getAvatarInfo() == null ? null : user.getAvatarInfo().getAvatarId());
+            userData.setAvatarId(user.getAvatarInfo() == null ? -1L : user.getAvatarInfo().getAvatarId());
             userData.setCellPhone(user.getCellPhone());
             if (user.getDateOfBirth() != null) {
                 userData.setDob(Common.simpleDateFormat.parse(user.getDateOfBirth()));
@@ -123,7 +141,11 @@ public class IdentityServiceImpl implements IdentityService {
 
             return userData;
         } catch (Exception ex) {
-            throw new BadRequestException("Failed to convert to user data", ex);
+            String msg = String.format("failed to convert user data, %s", ex);
+            logger.error(msg);
+            InvalidUserDataException invalidUserDataException = new InvalidUserDataException();
+            invalidUserDataException.setMsg(msg);
+            throw invalidUserDataException;
         }
     }
 

@@ -17,12 +17,19 @@ struct User {
 
 typedef map<i64, User> Users
 
+exception InvalidUserDataException {
+  1: string msg
+}
 exception UserNotFoundException {
-  1: string message
+  1: string msg
+}
+
+exception UserProcessException {
+  1: string msg
 }
 
 service IdentityService {
-  User create_user(1: required User user)
-  User get_user(1: required i64 user_id)
-  Users get_users(1: required set<i64> ids)
+  User create_user(1: required User user) throws ( 1: InvalidUserDataException iude, 2: UserProcessException upe )
+  User get_user(1: required i64 user_id) throws ( 1: UserNotFoundException unfe, 2: UserProcessException upe )
+  Users get_users(1: required set<i64> ids) throws ( 1: UserNotFoundException unfe, 2: UserProcessException upe )
 }
