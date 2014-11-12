@@ -4,7 +4,6 @@ import coffee.letsgo.avatar.Avatar;
 import coffee.letsgo.avatar.AvatarInfo;
 import coffee.letsgo.avatar.AvatarNotFoundException;
 import coffee.letsgo.avatar.NotSupportedFormatException;
-import com.facebook.swift.codec.ThriftField;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,13 +21,17 @@ public class AvatarImpl implements Avatar {
     private static Logger logger = LoggerFactory.getLogger(AvatarImpl.class);
 
     @Override
-    public AvatarInfo put(@ThriftField(value = 1, name = "img", requiredness = ThriftField.Requiredness.REQUIRED) byte[] img) throws NotSupportedFormatException, TException {
+    public AvatarInfo put(long userId, byte[] img)
+            throws NotSupportedFormatException, TException {
+
         BufferedImage bufferedImage = readImage(img);
         return new AvatarInfo();
     }
 
     @Override
-    public byte[] get(@ThriftField(value = 1, name = "info", requiredness = ThriftField.Requiredness.REQUIRED) AvatarInfo info) throws AvatarNotFoundException, TException {
+    public byte[] get(AvatarInfo info)
+            throws AvatarNotFoundException, TException {
+
         return new byte[0];
     }
 

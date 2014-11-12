@@ -14,6 +14,6 @@ exception NotSupportedFormatException {
 }
 
 service Avatar {
-  AvatarInfo put(1: required binary img) throws( 1: NotSupportedFormatException nsfe )
+  AvatarInfo put(1: required i64 user_id, 2: required binary img) throws( 1: NotSupportedFormatException nsfe )
   binary get(1: required AvatarInfo info) throws( 1: AvatarNotFoundException anfe )
 }
