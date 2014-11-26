@@ -7,12 +7,6 @@
     <artifactId>letsgo-coffee</artifactId>
     <packaging>pom</packaging>
     <version>0.0.1-SNAPSHOT</version>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <thrift.relative_path>src/main/thrift</thrift.relative_path>
-        <thrift.root>${project.basedir}/${thrift.relative_path}</thrift.root>
-    </properties>
     
     <modules>
         <module>iceflake</module>
