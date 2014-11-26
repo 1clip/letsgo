@@ -88,6 +88,7 @@ public class ClumbusClient {
                                     final Class<C> type,
                                     final Function<String, ListenableFuture<C>> tunnelCreator,
                                     final int retries) {
+        verifyNotNull(tunnelCreator);
         return type.cast(Proxy.newProxyInstance(type.getClassLoader(),
                 new Class[]{type},
                 new InvocationHandler() {
@@ -97,6 +98,7 @@ public class ClumbusClient {
                         while (++attempts <= retries) {
                             try {
                                 String uri = lb.next();
+                                verifyNotNull(uri);
                                 return method.invoke(tunnelCreator.apply(uri).get(), args);
                             } catch (Exception ex) {
                                 logger.error(String.format("client invocation failed %d/%d", attempts, retries), ex);
