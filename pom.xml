@@ -18,5 +18,6 @@
         <module>service-starter</module>
         <module>storeland</module>
         <module>parent</module>
+        <module>avatar</module>
     </modules>
 </project>

@@ -1,12 +1,10 @@
 package coffee.letsgo.iceflake.server;
 
-import coffee.letsgo.iceflake.Iceflake;
-import coffee.letsgo.iceflake.IdType;
-import coffee.letsgo.iceflake.InvalidIdTypeError;
-import coffee.letsgo.iceflake.InvalidSystemClock;
+import coffee.letsgo.iceflake.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import org.apache.thrift.TException;
 
 /**
  * Created by xbwu on 8/29/14.
@@ -62,7 +60,7 @@ public class IceflakeImpl implements Iceflake {
         this.lastTimestamps = new long[(int) maxIdType];
         this.sequences = new long[(int) maxIdType];
         this.locks = new Object[(int) maxIdType];
-        for(int i = 0; i < maxIdType; ++i) {
+        for (int i = 0; i < maxIdType; ++i) {
             lastTimestamps[i] = -1L;
             sequences[i] = 0L;
             locks[i] = new Object();
@@ -70,19 +68,25 @@ public class IceflakeImpl implements Iceflake {
     }
 
     @Override
-    public long getWorkerId() throws org.apache.thrift.TException {
+    public long getWorkerId() throws TException {
         return workerId;
     }
 
     @Override
-    public long getTimestamp() throws org.apache.thrift.TException {
+    public long getTimestamp() throws TException {
         return System.currentTimeMillis();
     }
 
     @Override
-    public long getId(final IdType type) throws org.apache.thrift.TException {
+    public long getId(final IdType type)
+            throws InvalidIdTypeException,
+            InvalidSystemClockException,
+            TException {
+
         if (type.getValue() < 0 || type.getValue() > maxIdType) {
-            throw new InvalidIdTypeError();
+            InvalidIdTypeException invalidIdTypeException = new InvalidIdTypeException();
+            invalidIdTypeException.setMsg(String.format("invalid id type value: %d", type.getValue()));
+            throw invalidIdTypeException;
         }
         return nextId(type.getValue());
     }
@@ -93,7 +97,11 @@ public class IceflakeImpl implements Iceflake {
             long timestamp = timeGen();
 
             if (timestamp < lastTimestamps[type]) {
-                throw new InvalidSystemClock();
+                InvalidSystemClockException invalidSystemClockException = new InvalidSystemClockException();
+                invalidSystemClockException.setMsg(String.format(
+                        "current ts %d is less then last ts %d",
+                        timestamp, lastTimestamps[type]));
+                throw invalidSystemClockException;
             }
 
             if (lastTimestamps[type] == timestamp) {

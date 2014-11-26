@@ -3,29 +3,19 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>identity</artifactId>
-        <groupId>coffee.letsgo.identity</groupId>
+        <artifactId>avatar</artifactId>
+        <groupId>coffee.letsgo</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>identity-server</artifactId>
+    <artifactId>avatar-server</artifactId>
 
     <properties>
         <thrift.root>${project.basedir}/../../${thrift.relative_path}</thrift.root>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>coffee.letsgo.iceflake</groupId>
-            <artifactId>iceflake-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>coffee.letsgo.identity</groupId>
-            <artifactId>identity-store</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>server-swift</artifactId>
@@ -40,16 +30,8 @@
             <artifactId>swift-service</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
+            <groupId>org.imgscalr</groupId>
+            <artifactId>imgscalr-lib</artifactId>
         </dependency>
     </dependencies>
 
@@ -69,7 +51,6 @@
                         <includes>
                             <include>avatar.thrift</include>
                             <include>iceflake.thrift</include>
-                            <include>identity.thrift</include>
                         </includes>
                     </idlFiles>
                 </configuration>

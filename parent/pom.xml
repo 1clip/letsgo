@@ -14,7 +14,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <thrift.relative_path>src/main/thrift</thrift.relative_path>
-        
+
         <dep.guava.version>18.0</dep.guava.version>
         <dep.guice.version>3.0</dep.guice.version>
         <dep.swift.version>0.13.2</dep.swift.version>
@@ -24,6 +24,7 @@
         <dep.gson.version>2.3</dep.gson.version>
         <dep.thrift.version>0.9.1</dep.thrift.version>
         <dep.datastax.version>2.1.2</dep.datastax.version>
+        <dep.imgscalr.version>4.2</dep.imgscalr.version>
         <dep.testng.version>6.8.8</dep.testng.version>
     </properties>
 
@@ -88,6 +89,11 @@
                 <groupId>com.datastax.cassandra</groupId>
                 <artifactId>cassandra-driver-mapping</artifactId>
                 <version>${dep.datastax.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.imgscalr</groupId>
+                <artifactId>imgscalr-lib</artifactId>
+                <version>${dep.imgscalr.version}</version>
             </dependency>
 
             <dependency>

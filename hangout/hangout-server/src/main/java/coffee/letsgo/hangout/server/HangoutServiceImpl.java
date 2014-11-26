@@ -2,10 +2,6 @@ package coffee.letsgo.hangout.server;
 
 import coffee.letsgo.common.Common;
 import coffee.letsgo.hangout.*;
-import coffee.letsgo.hangout.exception.BadRequestException;
-import coffee.letsgo.hangout.exception.DataFormatException;
-import coffee.letsgo.hangout.exception.HangoutInternalException;
-import coffee.letsgo.hangout.exception.HangoutNotFoundException;
 import coffee.letsgo.hangout.store.HangoutStore;
 import coffee.letsgo.hangout.store.HangoutStoreCassandraImpl;
 import coffee.letsgo.hangout.store.model.HangoutData;
@@ -17,8 +13,8 @@ import coffee.letsgo.iceflake.IdType;
 import coffee.letsgo.iceflake.client.IceflakeClient;
 import coffee.letsgo.identity.IdentityService;
 import coffee.letsgo.identity.User;
+import coffee.letsgo.identity.UserNotFoundException;
 import coffee.letsgo.identity.client.IdentityClient;
-import com.facebook.swift.codec.ThriftField;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
@@ -50,11 +46,10 @@ public class HangoutServiceImpl implements HangoutService {
         private static IdentityService instance = IdentityClient.getInstance();
     }
 
+
     @Override
-    public Hangout createHangout(
-            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
-            @ThriftField(value = 2, name = "hangOut", requiredness = ThriftField.Requiredness.NONE) Hangout hangOut)
-            throws TException {
+    public Hangout createHangout(long userId, Hangout hangOut)
+            throws InvalidHangoutDataException, HangoutProcessException, TException {
 
         verifyParticipators(hangOut.getParticipators());
         logger.debug("creating hangout for user %d", userId);
@@ -72,10 +67,8 @@ public class HangoutServiceImpl implements HangoutService {
     }
 
     @Override
-    public Hangout getHangoutById(
-            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
-            @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId)
-            throws TException {
+    public Hangout getHangoutById(long userId, long hangOutId)
+            throws HangoutNotFoundException, HangoutProcessException, TException {
 
         HangoutData hangoutData;
         try {
@@ -83,26 +76,30 @@ public class HangoutServiceImpl implements HangoutService {
         } catch (InterruptedException ex) {
             String msg = String.format("interrupted getting hangout data for id %d", hangOutId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         } catch (ExecutionException ex) {
             String msg = String.format("execution failure getting hangout data for id %d", hangOutId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         }
         if (!checkHangoutVisibility(hangoutData, userId)) {
-            logger.error("hangout id {} is not visible to user {}", hangOutId, userId);
-            throw new HangoutNotFoundException(String.format(
-                    "hangout id %d not found for user %d", hangOutId, userId));
+            String msg = String.format("hangout %d not visible to user %d", hangOutId, userId);
+            logger.error(msg);
+            HangoutNotFoundException hangoutNotFoundException = new HangoutNotFoundException();
+            hangoutNotFoundException.setMsg(msg);
+            throw hangoutNotFoundException;
         }
 
         return composeHangout(hangoutData);
     }
 
     @Override
-    public List<HangoutSummary> getHangoutByStatus(
-            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
-            @ThriftField(value = 2, name = "status", requiredness = ThriftField.Requiredness.NONE) final HangoutState status)
-            throws TException {
+    public List<HangoutSummary> getHangoutByStatus(long userId, final HangoutState status)
+            throws HangoutProcessException, TException {
 
         Collection<HangoutData> hangouts = Collections2.filter(
                 getHangouts(userId),
@@ -137,8 +134,12 @@ public class HangoutServiceImpl implements HangoutService {
                 }
             }
             if (organizer == null) {
-                throw new HangoutInternalException(String.format(
-                        "failed to get organizer for hangout id %d", hangoutData.getHangoutId()));
+                String msg = String.format(
+                        "failed to get organizer for hangout id %d", hangoutData.getHangoutId());
+                logger.error(msg);
+                HangoutProcessException hangoutProcessException = new HangoutProcessException();
+                hangoutProcessException.setMsg(msg);
+                throw hangoutProcessException;
             }
             HangoutSummary hangoutSummary = new HangoutSummary();
             hangoutSummary.setId(hangoutData.getHangoutId());
@@ -155,27 +156,29 @@ public class HangoutServiceImpl implements HangoutService {
     }
 
     @Override
-    public void updateHangout(
-            @ThriftField(value = 1, name = "userId", requiredness = ThriftField.Requiredness.NONE) long userId,
-            @ThriftField(value = 2, name = "hangOutId", requiredness = ThriftField.Requiredness.NONE) long hangOutId,
-            @ThriftField(value = 3, name = "participators", requiredness = ThriftField.Requiredness.NONE) Hangout hangout)
-            throws TException {
-
+    public void updateHangout(long userId, long hangOutId, Hangout hangout)
+            throws InvalidHangoutDataException, HangoutNotFoundException, HangoutProcessException, TException {
         HangoutFolkData hangoutFolkData = getHangoutFolk(hangOutId, userId);
         if (hangoutFolkData == null) {
-            throw new HangoutNotFoundException(String.format(
-                    "hangout %d not found for user %d",
-                    hangOutId, userId));
+            String msg = String.format("hangout %d not found for user %d", hangOutId, userId);
+            logger.error(msg);
+            HangoutNotFoundException hangoutNotFoundException = new HangoutNotFoundException();
+            hangoutNotFoundException.setMsg(msg);
+            throw hangoutNotFoundException;
         }
         if (hangout.getParticipators() == null || hangout.getParticipators().size() != 1) {
-            throw new BadRequestException("exactly 1 participator required");
+            InvalidHangoutDataException invalidHangoutDataException = new InvalidHangoutDataException();
+            invalidHangoutDataException.setMsg("exactly 1 participator required");
+            throw invalidHangoutDataException;
         }
         Participator participator = hangout.getParticipators().get(0);
         hangoutFolkData.setState(HangoutParticipatorStateData.valueOf(participator.getState().name()));
         hangoutFolkData.setComment(participator.getComment());
         if (hangoutFolkData.getRole() == HangoutParticipatorRoleData.ORGANIZER &&
                 hangoutFolkData.getState() != HangoutParticipatorStateData.ACCEPTED) {
-            throw new BadRequestException("organizer could not change status to any other then ACCEPTED");
+            InvalidHangoutDataException invalidHangoutDataException = new InvalidHangoutDataException();
+            invalidHangoutDataException.setMsg("organizer could not change status to any other then ACCEPTED");
+            throw invalidHangoutDataException;
         }
         HangoutStoreHolder.instance.setHangoutFolk(hangoutFolkData);
         if (hangoutFolkData.getRole() != HangoutParticipatorRoleData.ORGANIZER) {
@@ -203,16 +206,20 @@ public class HangoutServiceImpl implements HangoutService {
                 try {
                     hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
                 } catch (ParseException ex) {
-                    throw new BadRequestException(String.format(
-                            "unsupported format of start_time %s", hangout.getStartTime()), ex);
+                    InvalidHangoutDataException invalidHangoutDataException = new InvalidHangoutDataException();
+                    invalidHangoutDataException.setMsg(String.format(
+                            "unsupported format of start_time %s", hangout.getStartTime()));
+                    throw invalidHangoutDataException;
                 }
             }
             if (hangout.getEndTime() != null) {
                 try {
                     hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
                 } catch (ParseException ex) {
-                    throw new BadRequestException(String.format(
-                            "unsupported format of end_time %s", hangout.getEndTime()), ex);
+                    InvalidHangoutDataException invalidHangoutDataException = new InvalidHangoutDataException();
+                    invalidHangoutDataException.setMsg(String.format(
+                            "unsupported format of end_time %s", hangout.getEndTime()));
+                    throw invalidHangoutDataException;
                 }
             }
             if (hangout.getState() != null) {
@@ -224,7 +231,7 @@ public class HangoutServiceImpl implements HangoutService {
             }
             HangoutStoreHolder.instance.setHangout(hangoutData);
         }
-        if(hangout.getParticipators() != null) {
+        if (hangout.getParticipators() != null) {
             //TODO: atomically update participators
             throw new NotImplementedException();
         }
@@ -242,7 +249,15 @@ public class HangoutServiceImpl implements HangoutService {
         for (Participator p : participators) {
             ids.add(p.getId());
         }
-        return IdentityClientHolder.instance.getUsers(ids);
+        try {
+            return IdentityClientHolder.instance.getUsers(ids);
+        } catch (UserNotFoundException ex) {
+            String msg = String.format("user not found, %s", ex);
+            logger.error(msg);
+            InvalidHangoutDataException invalidHangoutDataException = new InvalidHangoutDataException();
+            invalidHangoutDataException.setMsg(msg);
+            throw invalidHangoutDataException;
+        }
     }
 
     private boolean checkHangoutVisibility(HangoutData hangoutData, long userId) {
@@ -261,11 +276,14 @@ public class HangoutServiceImpl implements HangoutService {
         hangoutData.setSubject(hangout.getSubject());
         hangoutData.setLocation(hangout.getLocation());
         try {
-            hangoutData.setStartTime(Common.simpleDateFormat.parse(hangout.getStartTime()));
-            hangoutData.setEndTime(Common.simpleDateFormat.parse(hangout.getEndTime()));
+            hangoutData.setStartTime(Common.simpleDateTimeFormat.parse(hangout.getStartTime()));
+            hangoutData.setEndTime(Common.simpleDateTimeFormat.parse(hangout.getEndTime()));
         } catch (ParseException ex) {
-            logger.error("failed to parse datetime", ex);
-            throw new DataFormatException("failed to parse hangout datetime", ex);
+            String msg = String.format("failed to parse datetime, %s", ex);
+            logger.error(msg);
+            InvalidHangoutDataException invalidHangoutDataException = new InvalidHangoutDataException();
+            invalidHangoutDataException.setMsg(msg);
+            throw invalidHangoutDataException;
         }
         Set<Long> participators = new HashSet<>();
         if (hangout.getParticipators() != null) {
@@ -323,8 +341,8 @@ public class HangoutServiceImpl implements HangoutService {
         hangout.setActivity(hangoutData.getActivity());
         hangout.setSubject(hangoutData.getSubject());
         hangout.setLocation(hangoutData.getLocation());
-        hangout.setStartTime(Common.simpleDateFormat.format(hangoutData.getStartTime()));
-        hangout.setEndTime(Common.simpleDateFormat.format(hangoutData.getEndTime()));
+        hangout.setStartTime(Common.simpleDateTimeFormat.format(hangoutData.getStartTime()));
+        hangout.setEndTime(Common.simpleDateTimeFormat.format(hangoutData.getEndTime()));
         hangout.setState(getHangoutState(hangoutData));
         hangout.setParticipators(getParticipators(hangoutData));
         return hangout;
@@ -376,11 +394,15 @@ public class HangoutServiceImpl implements HangoutService {
         } catch (InterruptedException ex) {
             String msg = String.format("interrupted getting hangout folks for hangout id %d", hangoutId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         } catch (ExecutionException ex) {
             String msg = String.format("execution failure getting hangout folks for hangout id %d", hangoutId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         }
         return hangoutFolks;
     }
@@ -392,11 +414,15 @@ public class HangoutServiceImpl implements HangoutService {
         } catch (InterruptedException ex) {
             String msg = String.format("interrupted getting hangouts for user %d", userId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         } catch (ExecutionException ex) {
             String msg = String.format("execution failure getting hangouts for user %d", userId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         }
         return hangouts;
     }
@@ -408,11 +434,15 @@ public class HangoutServiceImpl implements HangoutService {
         } catch (InterruptedException ex) {
             String msg = String.format("interrupted getting hangout with id %d", hangoutId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         } catch (ExecutionException ex) {
             String msg = String.format("execution failure getting hangout with id %d", hangoutId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         }
         return hangout;
     }
@@ -426,13 +456,17 @@ public class HangoutServiceImpl implements HangoutService {
                     "interrupted getting hangout folk with hangout id %d, user id %d",
                     hangoutId, userId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         } catch (ExecutionException ex) {
             String msg = String.format(
                     "execution failure getting hangout folk with hangout id %d, user id %d",
                     hangoutId, userId);
             logger.error(msg, ex);
-            throw new HangoutInternalException(msg, ex);
+            HangoutProcessException hangoutProcessException = new HangoutProcessException();
+            hangoutProcessException.setMsg(msg);
+            throw hangoutProcessException;
         }
         return hangoutFolkData;
     }

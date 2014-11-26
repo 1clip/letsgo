@@ -1,6 +1,6 @@
 CREATE TABLE letsgo.avatar (
     avatar_id bigint,
-    avatar_token varchar,
+    owner_id bigint,
     context varchar,
     create_time timestamp,
     update_time timestamp
