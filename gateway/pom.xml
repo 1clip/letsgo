@@ -20,12 +20,10 @@
         <dependency>
             <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.hangout</groupId>
             <artifactId>hangout-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>

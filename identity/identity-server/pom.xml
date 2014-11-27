@@ -19,17 +19,14 @@
         <dependency>
             <groupId>coffee.letsgo.iceflake</groupId>
             <artifactId>iceflake-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-store</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>server-swift</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>

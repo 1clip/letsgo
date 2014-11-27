@@ -15,7 +15,6 @@
         <dependency>
             <groupId>coffee.letsgo.storeland</groupId>
             <artifactId>storeland</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.datastax.cassandra</groupId>

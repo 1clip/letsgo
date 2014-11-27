@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>iceflake-root</artifactId>
+        <artifactId>iceflake</artifactId>
         <groupId>coffee.letsgo.iceflake</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
@@ -19,7 +19,6 @@
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>client-swift</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
@@ -40,7 +39,6 @@
         <dependency>
             <groupId>coffee.letsgo.iceflake</groupId>
             <artifactId>iceflake-server</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

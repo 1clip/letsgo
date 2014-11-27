@@ -19,27 +19,22 @@
         <dependency>
             <groupId>coffee.letsgo.iceflake</groupId>
             <artifactId>iceflake-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-client</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.hangout</groupId>
             <artifactId>hangout-store</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>server-swift</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo</groupId>
             <artifactId>common</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
@@ -64,19 +59,16 @@
         <dependency>
             <groupId>coffee.letsgo.identity</groupId>
             <artifactId>identity-server</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.iceflake</groupId>
             <artifactId>iceflake-server</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>coffee.letsgo.hangout</groupId>
             <artifactId>hangout-client</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

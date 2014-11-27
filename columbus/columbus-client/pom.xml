@@ -15,7 +15,6 @@
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>columbus-service</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

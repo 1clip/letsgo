@@ -19,7 +19,6 @@
         <dependency>
             <groupId>coffee.letsgo.columbus</groupId>
             <artifactId>client-swift</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
@@ -40,7 +39,6 @@
         <dependency>
             <groupId>coffee.letsgo.iceflake</groupId>
             <artifactId>iceflake-server</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
