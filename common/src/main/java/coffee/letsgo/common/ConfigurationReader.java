@@ -51,4 +51,8 @@ public class ConfigurationReader {
         logger.debug("reading property {}={}", key, val);
         return val;
     }
+
+    public Properties prop() {
+        return (Properties) prop.clone();
+    }
 }

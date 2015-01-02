@@ -19,5 +19,6 @@
         <module>storeland</module>
         <module>parent</module>
         <module>avatar</module>
+        <module>streaming</module>
     </modules>
 </project>
