@@ -5,4 +5,6 @@ package coffee.letsgo.streaming.publisher;
  */
 public interface Publisher {
     void publish(String topic, String msg);
+
+    void publish(String topic, Object obj);
 }
